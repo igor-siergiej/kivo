@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient, Document } from 'mongodb';
+import { Collection, Db, Document, MongoClient } from 'mongodb';
 
 import { IConfig } from '../config/types';
 import { DependencyContainer } from '../dependencyContainer';
