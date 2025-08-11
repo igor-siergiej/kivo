@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "declaration": true,
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "noImplicitAny": true,
+        "preserveConstEnums": true,
+        "noUnusedLocals": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "emitDeclarationOnly": true,
+        "outDir": "./build"
+    },
+    "include": [
+        "**/*"
+    ]
+}
