@@ -11,7 +11,7 @@ const router = new Router();
 // Health check endpoint
 router.get('/health', async (ctx) => {
     ctx.status = 200;
-    ctx.body = { status: 'healthy', service: 'auth', timestamp: new Date().toISOString() };
+    ctx.body = { status: 'healthy', service: 'kivo', timestamp: new Date().toISOString() };
 });
 
 router.post('/login', login);

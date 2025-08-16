@@ -46,7 +46,7 @@ export const login = async (ctx: Context) => {
 
     const { jwtSecret, accessTokenExpiry, refreshTokenExpiry, secure, sameSite } = DependencyContainer.getInstance().resolve(DependencyToken.Config) as IConfig;
 
-    const tokenPayload = { sub: username, username, id: user._id, aud: 'auth-service' };
+    const tokenPayload = { sub: username, username, id: user._id, aud: 'kivo' };
     const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as jwt.SignOptions);
     const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as jwt.SignOptions);
 

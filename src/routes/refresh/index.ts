@@ -23,7 +23,7 @@ export const refresh = async (ctx: Context) => {
 
     try {
         const payload = jwt.verify(refreshToken, jwtSecret) as { sub: string; aud?: string };
-        if (payload.aud !== 'auth-service') {
+        if (payload.aud !== 'kivo') {
             ctx.status = 401;
             ctx.body = { success: false, message: 'Invalid session' };
             return;
@@ -57,8 +57,8 @@ export const refresh = async (ctx: Context) => {
         const signOptsAccess = { expiresIn: accessTokenExpiry } as SignOptions;
         const signOptsRefresh = { expiresIn: refreshTokenExpiry } as SignOptions;
 
-        const newAccessToken = jwt.sign({ sub: username, username, id: user._id, aud: 'auth-service' }, jwtSecret, signOptsAccess);
-        const newRefreshToken = jwt.sign({ sub: username, username, id: user._id, aud: 'auth-service' }, jwtSecret, signOptsRefresh);
+        const newAccessToken = jwt.sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, signOptsAccess);
+        const newRefreshToken = jwt.sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, signOptsRefresh);
 
         const newTokenHash = hashToken(newRefreshToken);
 

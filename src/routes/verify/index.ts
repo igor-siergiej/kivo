@@ -19,7 +19,7 @@ export const verify = async (ctx: Context) => {
 
     try {
         const payload = jwt.verify(token, config.jwtSecret) as { aud?: string };
-        if (payload.aud !== 'auth-service') {
+        if (payload.aud !== 'kivo') {
             ctx.status = 401;
             ctx.body = { success: false, message: 'Invalid or expired token' };
             return;

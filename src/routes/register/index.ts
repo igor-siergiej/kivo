@@ -46,7 +46,7 @@ export const register = async (ctx: Context) => {
     const result = await usersCollection.insertOne({ _id: new ObjectId(), username, passwordHash });
 
     // generate tokens
-    const tokenPayload = { sub: username, username, id: result.insertedId, aud: 'auth-service' };
+    const tokenPayload = { sub: username, username, id: result.insertedId, aud: 'kivo' };
     const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as SignOptions);
     const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as SignOptions);
 

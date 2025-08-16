@@ -115,7 +115,7 @@ export const onStartup = async () => {
         app.use(routes.routes());
 
         app.listen(config.port, () => {
-            console.log(`auth-service running on port ${config.port}.`);
+            console.log(`kivo running on port ${config.port}.`);
         });
     } catch (error: unknown) {
         if (error instanceof Error) {
