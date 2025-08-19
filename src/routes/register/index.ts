@@ -37,7 +37,7 @@ export const register = async (ctx: Context) => {
     const existing = await usersCollection.findOne({ username });
     if (existing) {
         ctx.status = 400;
-        ctx.body = { success: false, message: 'Registration failed' };
+        ctx.body = { success: false, message: 'This username is already taken' };
         return;
     }
 

@@ -11,6 +11,7 @@ import { registerDepdendencies } from './dependencies';
 import { CollectionName, Session } from './lib/database/types';
 import { DependencyContainer } from './lib/dependencyContainer';
 import { DependencyToken } from './lib/dependencyContainer/types';
+import { initializeDatabase } from './lib/database/init';
 import routes from './routes';
 import { HttpErrorCode } from './types';
 
@@ -106,6 +107,8 @@ export const onStartup = async () => {
         }
 
         await database.connect();
+
+        await initializeDatabase();
 
         const sessions = database.getCollection<Session>(CollectionName.Sessions);
         sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }).catch((error) => {
