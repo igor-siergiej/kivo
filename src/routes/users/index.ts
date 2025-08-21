@@ -1,10 +1,11 @@
 import { Context } from 'koa';
+
 import { CollectionName, User } from '../../lib/database/types';
 import { DependencyContainer } from '../../lib/dependencyContainer';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 export const getUsersByUsernames = async (ctx: Context) => {
-    const { usernames } = ctx.request.body as { usernames?: string[] };
+    const { usernames } = ctx.request.body as { usernames?: Array<string> };
 
     if (!usernames || !Array.isArray(usernames)) {
         ctx.status = 400;

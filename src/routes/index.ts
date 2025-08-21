@@ -6,8 +6,8 @@ import { refresh } from './refresh';
 import { register } from './register';
 import { search } from './search';
 import { searchRateLimitMiddleware, searchSecurityMiddleware } from './search/middleware';
-import { verify } from './verify';
 import { getUsersByUsernames } from './users';
+import { verify } from './verify';
 
 const router = new Router();
 
