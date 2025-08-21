@@ -1,4 +1,5 @@
 import { Context } from 'koa';
+
 import { CollectionName, User } from '../../lib/database/types';
 import { DependencyContainer } from '../../lib/dependencyContainer';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
@@ -62,7 +63,7 @@ export const search = async (ctx: Context) => {
         if (results.length === 0) {
             const escapedQuery = sanitizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const searchRegex = new RegExp(escapedQuery, 'i');
-            
+
             const fallbackResults = await usersCollection
                 .find(
                     { username: searchRegex },
@@ -73,7 +74,7 @@ export const search = async (ctx: Context) => {
                     }
                 )
                 .toArray();
-            
+
             results.push(...fallbackResults);
         }
 
@@ -88,7 +89,6 @@ export const search = async (ctx: Context) => {
             count: usernames.length,
             query: sanitizedQuery
         };
-
     } catch (error) {
         console.error('Search error:', error);
         ctx.status = 500;

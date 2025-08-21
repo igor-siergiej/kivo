@@ -8,10 +8,10 @@ import KoaLogger from 'koa-logger';
 import ratelimit from 'koa-ratelimit';
 
 import { registerDepdendencies } from './dependencies';
+import { initializeDatabase } from './lib/database/init';
 import { CollectionName, Session } from './lib/database/types';
 import { DependencyContainer } from './lib/dependencyContainer';
 import { DependencyToken } from './lib/dependencyContainer/types';
-import { initializeDatabase } from './lib/database/init';
 import routes from './routes';
 import { HttpErrorCode } from './types';
 

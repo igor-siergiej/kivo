@@ -15,7 +15,7 @@ export const searchRateLimitMiddleware = async (ctx: Context, next: Next) => {
     }
 
     const clientData = searchRateLimit.get(clientIP);
-    
+
     if (!clientData || now > clientData.resetTime) {
         searchRateLimit.set(clientIP, {
             count: 1,
@@ -40,10 +40,10 @@ export const searchSecurityMiddleware = async (ctx: Context, next: Next) => {
     ctx.set('X-Content-Type-Options', 'nosniff');
     ctx.set('X-Frame-Options', 'DENY');
     ctx.set('X-XSS-Protection', '1; mode=block');
-    
+
     ctx.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     ctx.set('Pragma', 'no-cache');
     ctx.set('Expires', '0');
-    
+
     await next();
 };
