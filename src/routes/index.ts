@@ -7,6 +7,7 @@ import { register } from './register';
 import { search } from './search';
 import { searchRateLimitMiddleware, searchSecurityMiddleware } from './search/middleware';
 import { verify } from './verify';
+import { getUsersByUsernames } from './users';
 
 const router = new Router();
 
@@ -21,5 +22,6 @@ router.get('/search', searchSecurityMiddleware, searchRateLimitMiddleware, searc
 router.get('/verify', verify);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
+router.post('/users', getUsersByUsernames);
 
 export default router;
