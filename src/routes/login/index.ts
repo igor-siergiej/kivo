@@ -50,21 +50,18 @@ export const login = async (ctx: Context) => {
     const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as jwt.SignOptions);
     const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as jwt.SignOptions);
 
-    // Prevent proxies or browsers from caching the tokens
     ctx.set('Cache-Control', 'no-store');
     ctx.set('Pragma', 'no-cache');
 
-    // Save session (hashed refresh token)
     const sessionsCollection = database.getCollection<Session>(CollectionName.Sessions);
     const tokenHash = hashToken(refreshToken);
     await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
 
-    // Store refresh token in secure, httpOnly cookie (30 days)
     ctx.cookies.set('refreshToken', refreshToken, {
         httpOnly: true,
         secure,
         sameSite,
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000
     });
 
     ctx.body = {
