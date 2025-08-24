@@ -17,11 +17,17 @@ router.get('/health', async (ctx) => {
 });
 
 router.post('/login', login);
+
 router.post('/register', register);
+
 router.get('/search', searchSecurityMiddleware, searchRateLimitMiddleware, search);
+
 router.get('/verify', verify);
+
 router.post('/refresh', refresh);
+
 router.post('/logout', logout);
+
 router.post('/users', getUsersByUsernames);
 
 export default router;
