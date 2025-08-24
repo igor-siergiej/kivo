@@ -8,18 +8,18 @@ on:
 
 jobs:
   ci:
-    uses: igor-siergiej/im-apps-utils/workflows/ci.yml@main
+    uses: igor-siergiej/im-apps-utils/.github/workflows/ci.yml@main
 
   build:
     needs: ci
-    uses: igor-siergiej/im-apps-utils/workflows/docker-build.yml@main
+    uses: igor-siergiej/im-apps-utils/.github/workflows/docker-build.yml@main
     with:
       app_name: kivo
       registry: 192.168.68.54:31834
 
   gitops:
     needs: build
-    uses: igor-siergiej/im-apps-utils/workflows/gitops-update.yml@main
+    uses: igor-siergiej/im-apps-utils/.github/workflows/gitops-update.yml@main
     with:
       app_name: kivo
       registry: 192.168.68.54:31834
