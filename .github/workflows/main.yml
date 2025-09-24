@@ -10,8 +10,7 @@ on:
 jobs:
   ci:
     uses: igor-siergiej/im-apps-utils/.github/workflows/ci.yml@main
-    secrets:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+    secrets: inherit
 
   build:
     needs: ci
@@ -19,8 +18,7 @@ jobs:
     with:
       app_name: kivo
       registry: 192.168.68.54:31834
-    secrets:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+    secrets: inherit
 
   gitops:
     needs: build
@@ -29,5 +27,4 @@ jobs:
       app_name: kivo
       registry: 192.168.68.54:31834
       version: ${{ needs.build.outputs.version }}
-    secrets:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+    secrets: inherit
