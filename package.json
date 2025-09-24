@@ -1,52 +1,52 @@
 {
-  "name": "kivo",
-  "version": "1.0.0",
-  "type": "commonjs",
-  "scripts": {
-    "start": "dotenv -e .env -- tsx watch src/index.ts",
-    "build": "tsup --config src/tsup.config.ts",
-    "lint": "eslint . --ext .ts,.mts,.cts",
-    "lint:fix": "eslint . --ext .ts,.mts,.cts --fix",
-    "prepare": "husky"
-  },
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "koa": "^2.16.0",
-    "koa-body": "^6.0.1",
-    "koa-cors": "^0.0.16",
-    "koa-helmet": "^6.0.0",
-    "koa-logger": "^3.2.1",
-    "koa-ratelimit": "^5.0.1",
-    "koa-router": "^13.0.1",
-    "mongodb": "^6.13.1",
-    "vscode": "^1.1.37"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "@types/bcrypt": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.2",
-    "@types/koa": "^2.15.0",
-    "@types/koa-cors": "^0.0.6",
-    "@types/koa-helmet": "^6.0.6",
-    "@types/koa-logger": "^3.1.5",
-    "@types/koa-ratelimit": "^5.0.5",
-    "@types/koa-router": "^7.4.8",
-    "@typescript-eslint/eslint-plugin": "^8.44.1",
-    "@typescript-eslint/parser": "^8.44.1",
-    "dotenv": "^17.2.1",
-    "dotenv-cli": "^10.0.0",
-    "eslint": "^9.33.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.0",
-    "tsup": "^8.5.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.8.2"
-  },
-  "packageManager": "yarn@4.9.2",
-  "lint-staged": {
-    "*.{ts,mts,cts}": [
-      "eslint --fix"
-    ]
-  }
+    "name": "kivo",
+    "version": "0.1.7",
+    "type": "commonjs",
+    "scripts": {
+        "start": "dotenv -e .env -- tsx watch src/index.ts",
+        "build": "tsup --config src/tsup.config.ts",
+        "lint": "eslint . --ext .ts,.mts,.cts",
+        "lint:fix": "eslint . --ext .ts,.mts,.cts --fix",
+        "prepare": "husky"
+    },
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "jsonwebtoken": "^9.0.2",
+        "koa": "^2.16.0",
+        "koa-body": "^6.0.1",
+        "koa-cors": "^0.0.16",
+        "koa-helmet": "^6.0.0",
+        "koa-logger": "^3.2.1",
+        "koa-ratelimit": "^5.0.1",
+        "koa-router": "^13.0.1",
+        "mongodb": "^6.13.1",
+        "vscode": "^1.1.37"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.36.0",
+        "@types/bcrypt": "^5.0.0",
+        "@types/jsonwebtoken": "^9.0.2",
+        "@types/koa": "^2.15.0",
+        "@types/koa-cors": "^0.0.6",
+        "@types/koa-helmet": "^6.0.6",
+        "@types/koa-logger": "^3.1.5",
+        "@types/koa-ratelimit": "^5.0.5",
+        "@types/koa-router": "^7.4.8",
+        "@typescript-eslint/eslint-plugin": "^8.44.1",
+        "@typescript-eslint/parser": "^8.44.1",
+        "dotenv": "^17.2.1",
+        "dotenv-cli": "^10.0.0",
+        "eslint": "^9.33.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.2.0",
+        "tsup": "^8.5.0",
+        "tsx": "^4.19.2",
+        "typescript": "^5.8.2"
+    },
+    "packageManager": "yarn@4.9.2",
+    "lint-staged": {
+        "*.{ts,mts,cts}": [
+            "eslint --fix"
+        ]
+    }
 }
