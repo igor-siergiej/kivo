@@ -1,7 +1,6 @@
-import { Context } from 'koa';
+import type { Context } from 'koa';
 
-import { CollectionName, User } from '../../lib/database/types';
-import { DependencyContainer } from '../../lib/dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 export const search = async (ctx: Context) => {
@@ -30,7 +29,7 @@ export const search = async (ctx: Context) => {
 
     // Validate and parse limit
     const parsedLimit = parseInt(limit, 10);
-    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
+    if (Number.isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
         ctx.status = 400;
         ctx.body = { success: false, message: 'Limit must be between 1 and 20' };
         return;
@@ -45,9 +44,8 @@ export const search = async (ctx: Context) => {
     }
 
     try {
-        const container = DependencyContainer.getInstance();
-        const database = container.resolve(DependencyToken.Database)!;
-        const usersCollection = database.getCollection<User>(CollectionName.Users);
+        const database = dependencyContainer.resolve(DependencyToken.Database);
+        const usersCollection = database.getCollection('users');
 
         const results = await usersCollection
             .find(
@@ -55,7 +53,7 @@ export const search = async (ctx: Context) => {
                 {
                     projection: { username: 1, _id: 0, score: { $meta: 'textScore' } },
                     limit: parsedLimit,
-                    sort: { score: { $meta: 'textScore' }, username: 1 }
+                    sort: { score: { $meta: 'textScore' }, username: 1 },
                 }
             )
             .toArray();
@@ -70,7 +68,7 @@ export const search = async (ctx: Context) => {
                     {
                         projection: { username: 1, _id: 0 },
                         limit: parsedLimit,
-                        sort: { username: 1 }
+                        sort: { username: 1 },
                     }
                 )
                 .toArray();
@@ -78,7 +76,7 @@ export const search = async (ctx: Context) => {
             results.push(...fallbackResults);
         }
 
-        const usernames = results.map(user => user.username);
+        const usernames = results.map((user) => user.username);
 
         ctx.set('Cache-Control', 'public, max-age=30');
         ctx.set('X-Query-Time', Date.now().toString());
@@ -87,10 +85,11 @@ export const search = async (ctx: Context) => {
             success: true,
             usernames,
             count: usernames.length,
-            query: sanitizedQuery
+            query: sanitizedQuery,
         };
     } catch (error) {
-        console.error('Search error:', error);
+        const logger = dependencyContainer.resolve(DependencyToken.Logger);
+        logger.error('Search error', error);
         ctx.status = 500;
         ctx.body = { success: false, message: 'Internal server error' };
     }

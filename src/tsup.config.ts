@@ -10,5 +10,16 @@ export default defineConfig({
     sourcemap: true,
     clean: true,
     dts: false,
-    external: ['koa', 'koa-body', 'koa-cors', 'koa-helmet', 'koa-logger', 'koa-ratelimit', 'koa-router', 'mongodb', 'bcrypt', 'jsonwebtoken']
+    external: [
+        'koa',
+        'koa-body',
+        'koa-cors',
+        'koa-helmet',
+        'koa-logger',
+        'koa-ratelimit',
+        'koa-router',
+        'mongodb',
+        'bcrypt',
+        'jsonwebtoken',
+    ],
 });

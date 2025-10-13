@@ -1,14 +1,4 @@
-import { BSON, Collection, ObjectId } from 'mongodb';
-
-export enum CollectionName {
-    Sessions = 'sessions',
-    Users = 'users'
-}
-
-export interface IDatabase {
-    connect: () => Promise<void>;
-    getCollection<T extends BSON.Document>(collectionName: CollectionName): Collection<T>;
-}
+import type { BSON, ObjectId } from 'mongodb';
 
 export interface Session extends BSON.Document {
     _id: ObjectId;

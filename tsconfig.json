@@ -1,20 +1,26 @@
 {
-    "compilerOptions": {
-        "composite": true,
-        "declaration": true,
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "target": "ESNext",
-        "noImplicitAny": true,
-        "preserveConstEnums": true,
-        "noUnusedLocals": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "emitDeclarationOnly": true,
-        "outDir": "./build"
-    },
-    "include": [
-        "**/*"
-    ]
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+
+    "noEmit": true,
+
+    "types": ["bun-types"],
+    "lib": ["ESNext"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build", "dist"]
 }

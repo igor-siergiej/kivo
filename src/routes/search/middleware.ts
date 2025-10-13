@@ -1,4 +1,4 @@
-import { Context, Next } from 'koa';
+import type { Context, Next } from 'koa';
 
 const searchRateLimit = new Map<string, { count: number; resetTime: number }>();
 
@@ -19,14 +19,14 @@ export const searchRateLimitMiddleware = async (ctx: Context, next: Next) => {
     if (!clientData || now > clientData.resetTime) {
         searchRateLimit.set(clientIP, {
             count: 1,
-            resetTime: now + windowMs
+            resetTime: now + windowMs,
         });
     } else if (clientData.count >= maxRequests) {
         ctx.status = 429;
         ctx.body = {
             success: false,
             message: 'Search rate limit exceeded. Please try again later.',
-            retryAfter: Math.ceil((clientData.resetTime - now) / 1000)
+            retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
         };
         return;
     } else {

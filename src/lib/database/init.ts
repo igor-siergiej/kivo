@@ -1,19 +1,18 @@
-import { DependencyContainer } from '../dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../dependencyContainer/types';
-import { CollectionName } from './types';
 
 export const initializeDatabase = async () => {
-    const container = DependencyContainer.getInstance();
-    const database = container.resolve(DependencyToken.Database)!;
+    const database = dependencyContainer.resolve(DependencyToken.Database);
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     try {
-        const usersCollection = database.getCollection(CollectionName.Users);
+        const usersCollection = database.getCollection('users');
 
         await usersCollection.createIndex(
             { username: 1 },
             {
                 unique: true,
-                collation: { locale: 'en', strength: 2 }
+                collation: { locale: 'en', strength: 2 },
             }
         );
 
@@ -21,13 +20,13 @@ export const initializeDatabase = async () => {
             { username: 'text' },
             {
                 name: 'username_text_search',
-                weights: { username: 1 }
+                weights: { username: 1 },
             }
         );
 
-        console.log('✅ Database indexes created successfully');
+        logger.info('Database user indexes created successfully');
     } catch (error) {
-        console.error('❌ Error creating database indexes:', error);
+        logger.error('Error creating database indexes', error);
         throw error;
     }
 };

@@ -1,17 +1,20 @@
-import crypto from 'crypto';
-import jwt, { SignOptions } from 'jsonwebtoken';
-import { Context } from 'koa';
+import crypto from 'node:crypto';
+import jwt, { type SignOptions } from 'jsonwebtoken';
+import type { Context } from 'koa';
 import { ObjectId } from 'mongodb';
 
-import { IConfig } from '../../lib/config/types';
-import { CollectionName, Session, User } from '../../lib/database/types';
-import { DependencyContainer } from '../../lib/dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
 export const refresh = async (ctx: Context) => {
-    const { jwtSecret, accessTokenExpiry, refreshTokenExpiry, secure, sameSite } = DependencyContainer.getInstance().resolve(DependencyToken.Config) as IConfig;
+    const config = dependencyContainer.resolve(DependencyToken.Config);
+    const jwtSecret = config.get('jwtSecret');
+    const accessTokenExpiry = config.get('accessTokenExpiry');
+    const refreshTokenExpiry = config.get('refreshTokenExpiry');
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
 
     const refreshToken = ctx.cookies.get('refreshToken');
 
@@ -30,8 +33,8 @@ export const refresh = async (ctx: Context) => {
         }
         const username = payload.sub;
 
-        const database = DependencyContainer.getInstance().resolve(DependencyToken.Database)!;
-        const sessionsCollection = database.getCollection<Session>(CollectionName.Sessions);
+        const database = dependencyContainer.resolve(DependencyToken.Database);
+        const sessionsCollection = database.getCollection('sessions');
 
         const tokenHash = hashToken(refreshToken);
 
@@ -44,7 +47,7 @@ export const refresh = async (ctx: Context) => {
         }
 
         // Get user to include ID in tokens
-        const usersCollection = database.getCollection<User>(CollectionName.Users);
+        const usersCollection = database.getCollection('users');
         const user = await usersCollection.findOne({ username });
 
         if (!user) {
@@ -57,13 +60,26 @@ export const refresh = async (ctx: Context) => {
         const signOptsAccess = { expiresIn: accessTokenExpiry } as SignOptions;
         const signOptsRefresh = { expiresIn: refreshTokenExpiry } as SignOptions;
 
-        const newAccessToken = jwt.sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, signOptsAccess);
-        const newRefreshToken = jwt.sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, signOptsRefresh);
+        const newAccessToken = jwt.sign(
+            { sub: username, username, id: user._id, aud: 'kivo' },
+            jwtSecret,
+            signOptsAccess
+        );
+        const newRefreshToken = jwt.sign(
+            { sub: username, username, id: user._id, aud: 'kivo' },
+            jwtSecret,
+            signOptsRefresh
+        );
 
         const newTokenHash = hashToken(newRefreshToken);
 
         // Store new session and delete old one atomically
-        await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash: newTokenHash, createdAt: new Date() });
+        await sessionsCollection.insertOne({
+            _id: new ObjectId(),
+            username,
+            tokenHash: newTokenHash,
+            createdAt: new Date(),
+        });
         await sessionsCollection.deleteOne({ _id: session._id });
 
         // Prevent caching of sensitive token response
@@ -75,14 +91,15 @@ export const refresh = async (ctx: Context) => {
             httpOnly: true,
             secure,
             sameSite,
-            maxAge: 30 * 24 * 60 * 60 * 1000
+            maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
         ctx.body = {
-            accessToken: newAccessToken
+            accessToken: newAccessToken,
         };
     } catch (error) {
-        console.error('Error refreshing token', error);
+        const logger = dependencyContainer.resolve(DependencyToken.Logger);
+        logger.error('Error refreshing token', error);
         ctx.status = 401;
         ctx.body = { success: false, message: 'Invalid or expired refresh token' };
     }

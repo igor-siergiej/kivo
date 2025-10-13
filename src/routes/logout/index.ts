@@ -1,9 +1,7 @@
-import crypto from 'crypto';
-import { Context } from 'koa';
+import crypto from 'node:crypto';
+import type { Context } from 'koa';
 
-import { IConfig } from '../../lib/config/types';
-import { CollectionName, Session } from '../../lib/database/types';
-import { DependencyContainer } from '../../lib/dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
@@ -16,10 +14,11 @@ export const logout = async (ctx: Context) => {
         return;
     }
 
-    const container = DependencyContainer.getInstance();
-    const database = container.resolve(DependencyToken.Database)!;
-    const { secure, sameSite } = container.resolve(DependencyToken.Config) as IConfig;
-    const sessionsCollection = database.getCollection<Session>(CollectionName.Sessions);
+    const database = dependencyContainer.resolve(DependencyToken.Database);
+    const config = dependencyContainer.resolve(DependencyToken.Config);
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
+    const sessionsCollection = database.getCollection('sessions');
 
     const tokenHash = hashToken(refreshToken);
 
@@ -30,7 +29,7 @@ export const logout = async (ctx: Context) => {
         httpOnly: true,
         secure,
         sameSite,
-        maxAge: 0
+        maxAge: 0,
     });
 
     ctx.body = { success: true };

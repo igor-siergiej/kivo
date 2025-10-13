@@ -1,12 +1,10 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { Context } from 'koa';
+import type { Context } from 'koa';
 import { ObjectId } from 'mongodb';
 
-import { IConfig } from '../../lib/config/types';
-import { CollectionName, Session, User } from '../../lib/database/types';
-import { DependencyContainer } from '../../lib/dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 interface IUser {
@@ -26,8 +24,8 @@ export const login = async (ctx: Context) => {
         return;
     }
 
-    const database = DependencyContainer.getInstance().resolve(DependencyToken.Database)!;
-    const usersCollection = database.getCollection<User>(CollectionName.Users);
+    const database = dependencyContainer.resolve(DependencyToken.Database);
+    const usersCollection = database.getCollection('users');
 
     const user = (await usersCollection.findOne({ username })) as IUser | null;
 
@@ -44,7 +42,12 @@ export const login = async (ctx: Context) => {
         }
     }
 
-    const { jwtSecret, accessTokenExpiry, refreshTokenExpiry, secure, sameSite } = DependencyContainer.getInstance().resolve(DependencyToken.Config) as IConfig;
+    const config = dependencyContainer.resolve(DependencyToken.Config);
+    const jwtSecret = config.get('jwtSecret');
+    const accessTokenExpiry = config.get('accessTokenExpiry');
+    const refreshTokenExpiry = config.get('refreshTokenExpiry');
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
 
     const tokenPayload = { sub: username, username, id: user._id, aud: 'kivo' };
     const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as jwt.SignOptions);
@@ -53,7 +56,7 @@ export const login = async (ctx: Context) => {
     ctx.set('Cache-Control', 'no-store');
     ctx.set('Pragma', 'no-cache');
 
-    const sessionsCollection = database.getCollection<Session>(CollectionName.Sessions);
+    const sessionsCollection = database.getCollection('sessions');
     const tokenHash = hashToken(refreshToken);
     await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
 
@@ -61,10 +64,10 @@ export const login = async (ctx: Context) => {
         httpOnly: true,
         secure,
         sameSite,
-        maxAge: 30 * 24 * 60 * 60 * 1000
+        maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     ctx.body = {
-        accessToken
+        accessToken,
     };
 };

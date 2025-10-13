@@ -1,12 +1,10 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
-import jwt, { SignOptions } from 'jsonwebtoken';
-import { Context } from 'koa';
+import jwt, { type SignOptions } from 'jsonwebtoken';
+import type { Context } from 'koa';
 import { ObjectId } from 'mongodb';
 
-import { IConfig } from '../../lib/config/types';
-import { CollectionName, Session, User } from '../../lib/database/types';
-import { DependencyContainer } from '../../lib/dependencyContainer';
+import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
@@ -28,11 +26,15 @@ export const register = async (ctx: Context) => {
         return;
     }
 
-    const container = DependencyContainer.getInstance();
-    const database = container.resolve(DependencyToken.Database)!;
-    const { jwtSecret, accessTokenExpiry, refreshTokenExpiry, secure, sameSite } = container.resolve(DependencyToken.Config) as IConfig;
+    const database = dependencyContainer.resolve(DependencyToken.Database);
+    const config = dependencyContainer.resolve(DependencyToken.Config);
+    const jwtSecret = config.get('jwtSecret');
+    const accessTokenExpiry = config.get('accessTokenExpiry');
+    const refreshTokenExpiry = config.get('refreshTokenExpiry');
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
 
-    const usersCollection = database.getCollection<User>(CollectionName.Users);
+    const usersCollection = database.getCollection('users');
 
     const existing = await usersCollection.findOne({ username });
     if (existing) {
@@ -55,7 +57,7 @@ export const register = async (ctx: Context) => {
     ctx.set('Pragma', 'no-cache');
 
     // Save session with hashed refresh token
-    const sessionsCollection = database.getCollection<Session>(CollectionName.Sessions);
+    const sessionsCollection = database.getCollection('sessions');
     const tokenHash = hashToken(refreshToken);
     await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
 
@@ -64,10 +66,10 @@ export const register = async (ctx: Context) => {
         httpOnly: true,
         secure,
         sameSite,
-        maxAge: 30 * 24 * 60 * 60 * 1000
+        maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     ctx.body = {
-        accessToken
+        accessToken,
     };
 };

@@ -1,18 +1,21 @@
-import { IConfig } from '../config/types';
-import { IDatabase } from '../database/types';
+import type { Logger, MongoDbConnection } from '@imapps/api-utils';
+import type { IConfig } from '../config/types';
+import type { Session, User } from '../database/types';
 
-export type ConstructorOfType<T> = new (...args: Array<unknown>) => T;
+// Collection type mapping for MongoDB
+export type Collections = {
+    sessions: Session;
+    users: User;
+};
 
 export enum DependencyToken {
     Database = 'Database',
-    Config = 'Config'
+    Logger = 'Logger',
+    Config = 'Config',
 }
 
-export interface IInstances {
-    [DependencyToken.Database]?: IDatabase;
-    [DependencyToken.Config]?: IConfig;
-}
-
-export type IDependencies = {
-    [key in keyof IInstances]?: ConstructorOfType<IInstances[key]>
+export type Dependencies = {
+    [DependencyToken.Database]: MongoDbConnection<Collections>;
+    [DependencyToken.Logger]: Logger;
+    [DependencyToken.Config]: IConfig;
 };

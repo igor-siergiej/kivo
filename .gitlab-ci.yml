@@ -1,0 +1,72 @@
+# GitLab CI configuration for Kivo Authentication Service
+include:
+  - project: 'imapps/utils'
+    file: 'templates.yml'
+
+variables:
+  PROJECT_NAME: "kivo"
+  APP_NAME: "kivo"
+  DOCKERFILE_PATH: "Dockerfile"
+
+# CI job - extends the Bun template
+ci:
+  extends: .ci-bun-template
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+# Version release - bump version and create tag after successful builds
+version-release:
+  extends: .version-release-bun-template
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  needs:
+    - ci
+    - docker-build
+
+# Build kivo Docker image (test build with SHA tag)
+docker-build:
+  extends: .docker-build-template
+  variables:
+    APP_NAME: "kivo"
+    DOCKERFILE_PATH: "Dockerfile"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  needs:
+    - ci
+
+# Publish kivo Docker image with semantic version
+docker-publish:
+  extends: .docker-publish-template
+  variables:
+    APP_NAME: "kivo"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  needs:
+    - job: version-release
+      artifacts: true
+
+# Update staging environment automatically
+gitops-staging:
+  extends: .gitops-staging-template
+  variables:
+    APP_IMAGES: "kivo:kivo"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  needs:
+    - version-release
+    - docker-publish
+
+# Manual production deployment
+gitops-production:
+  extends: .production-deploy-template
+  variables:
+    APP_IMAGES: "kivo:kivo"
+  needs:
+    - version-release
+    - gitops-staging
