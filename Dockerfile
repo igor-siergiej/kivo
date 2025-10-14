@@ -2,7 +2,7 @@ FROM oven/bun:1.1.38-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json bun.lock ./
+COPY package.json bun.lock bunfig.toml ./
 
 RUN bun install --frozen-lockfile
 
@@ -14,7 +14,7 @@ FROM oven/bun:1.1.38-alpine AS runner
 
 WORKDIR /app
 
-COPY package.json bun.lock ./
+COPY package.json bun.lock bunfig.toml ./
 
 RUN bun install --frozen-lockfile --production && \
     rm -rf /root/.bun/install/cache
