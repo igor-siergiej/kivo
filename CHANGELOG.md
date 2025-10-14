@@ -1,3 +1,11 @@
+## [1.0.4](https://gitlab.com/imapps/kivo/compare/v1.0.3...v1.0.4) (2025-10-14)
+
+
+### Bug Fixes
+
+* add build tools for bcrypt native compilation in Docker ([84ff82f](https://gitlab.com/imapps/kivo/commit/84ff82f2e54ff60f55540aae2d18e6b01be064cd))
+* use named export for koa-body ([3f60115](https://gitlab.com/imapps/kivo/commit/3f60115c8f826d6c80dfbef4e3c88d44e0fc244b))
+
 ## [1.0.3](https://gitlab.com/imapps/kivo/compare/v1.0.2...v1.0.3) (2025-10-14)
 
 
