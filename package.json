@@ -2,7 +2,7 @@
   "name": "kivo",
   "version": "0.1.7",
   "type": "module",
-  "repository": "git@gitlab.com:imapps/kivo.git",
+  "repository": "https://gitlab.com/imapps/kivo.git",
   "author": "Igor Siergiej <igorsiergiej@gmail.com>",
   "scripts": {
     "start": "bun --hot src/index.ts",
