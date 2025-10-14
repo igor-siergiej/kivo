@@ -1,12 +1,9 @@
 import Koa, { type Context, type Request } from 'koa';
-import * as koaBodyModule from 'koa-body';
+import { koaBody } from 'koa-body';
 import koaCors, { type Options } from 'koa-cors';
 import helmet from 'koa-helmet';
 import KoaLogger from 'koa-logger';
 import ratelimit from 'koa-ratelimit';
-
-// Handle CommonJS default export for koa-body
-const koaBody = (koaBodyModule as any).default || koaBodyModule;
 
 import { dependencyContainer, registerDepdendencies } from './dependencies';
 import { initializeDatabase } from './lib/database/init';
