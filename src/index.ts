@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 import Koa, { type Context, type Request } from 'koa';
 import koaBody from 'koa-body';
 import koaCors, { type Options } from 'koa-cors';

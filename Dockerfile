@@ -1,37 +1,27 @@
-FROM node:22-alpine AS builder
+FROM oven/bun:1.1.38-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json bun.lock ./
 
-ENV YARN_NODE_LINKER=node-modules
-
-RUN corepack enable && corepack prepare yarn@4.9.2 --activate
-
-RUN yarn install --immutable
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN yarn install --immutable
+RUN bun run build
 
-RUN yarn build
-
-FROM node:22-alpine AS runner
+FROM oven/bun:1.1.38-alpine AS runner
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json bun.lock ./
 
-ENV YARN_NODE_LINKER=node-modules
-
-RUN corepack enable && corepack prepare yarn@4.9.2 --activate && \
-    yarn install --immutable && \
-    yarn cache clean && \
-    rm -rf /root/.cache
+RUN bun install --frozen-lockfile --production && \
+    rm -rf /root/.bun/install/cache
 
 COPY --from=builder /app/build ./build
 
 EXPOSE 3008
 
-CMD ["node", "build/index.js"]
+CMD ["bun", "run", "build/index.js"]
 
