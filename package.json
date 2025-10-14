@@ -1,6 +1,6 @@
 {
   "name": "kivo",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "type": "module",
   "repository": "git@gitlab.com:imapps/kivo.git",
   "author": "Igor Siergiej <igorsiergiej@gmail.com>",
