@@ -1,3 +1,10 @@
+## [1.0.3](https://gitlab.com/imapps/kivo/compare/v1.0.2...v1.0.3) (2025-10-14)
+
+
+### Bug Fixes
+
+* handle koa-body CommonJS export in bundled code ([0778773](https://gitlab.com/imapps/kivo/commit/07787737c25306941ad9523712d67b33a47632de))
+
 ## [1.0.2](https://gitlab.com/imapps/kivo/compare/v1.0.1...v1.0.2) (2025-10-14)
 
 
