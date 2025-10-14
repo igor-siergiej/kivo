@@ -2,7 +2,7 @@
   "name": "kivo",
   "version": "1.0.0",
   "type": "module",
-  "repository": "git@gitlab.com:imapps/kivo.git",
+  "repository": "https://gitlab.com/imapps/kivo.git",
   "author": "Igor Siergiej <igorsiergiej@gmail.com>",
   "scripts": {
     "start": "bun --hot src/index.ts",
@@ -10,7 +10,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --fix --unsafe .",
     "format": "biome format --write .",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "release": "semantic-release"
   },
   "dependencies": {
