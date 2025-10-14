@@ -4,9 +4,6 @@ WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml ./
 
-# Set HUSKY=0 to disable git hooks, but allow other scripts (like bcrypt postinstall)
-ENV HUSKY=0
-
 RUN bun install --frozen-lockfile
 
 COPY . .
@@ -18,9 +15,6 @@ FROM oven/bun:1.1.38-alpine AS runner
 WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml ./
-
-# Set HUSKY=0 to disable git hooks, but allow other scripts (like bcrypt postinstall)
-ENV HUSKY=0
 
 RUN bun install --frozen-lockfile --production && \
     rm -rf /root/.bun/install/cache
