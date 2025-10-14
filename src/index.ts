@@ -40,6 +40,9 @@ const bodyOptions = {
 
 export const onStartup = async () => {
     try {
+        // Register dependencies first, before any code that might need them
+        registerDepdendencies();
+
         const app = new Koa();
         app.proxy = true;
 
@@ -98,8 +101,6 @@ export const onStartup = async () => {
                 });
             }
         });
-
-        registerDepdendencies();
 
         const database = dependencyContainer.resolve(DependencyToken.Database);
         const config = dependencyContainer.resolve(DependencyToken.Config);
