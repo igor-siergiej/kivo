@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml ./
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
@@ -16,7 +16,7 @@ WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml ./
 
-RUN bun install --frozen-lockfile --production && \
+RUN bun install --frozen-lockfile --production --ignore-scripts && \
     rm -rf /root/.bun/install/cache
 
 COPY --from=builder /app/build ./build
