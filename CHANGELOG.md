@@ -1,3 +1,10 @@
+## [1.0.2](https://gitlab.com/imapps/kivo/compare/v1.0.1...v1.0.2) (2025-10-14)
+
+
+### Bug Fixes
+
+* register dependencies before setting up error handler ([7f6c97d](https://gitlab.com/imapps/kivo/commit/7f6c97d782aa9ff9a8836fca1d50c6a6ea0c2217))
+
 ## [1.0.1](https://gitlab.com/imapps/kivo/compare/v1.0.0...v1.0.1) (2025-10-14)
 
 
