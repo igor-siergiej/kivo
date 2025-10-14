@@ -1,3 +1,11 @@
+## [1.0.1](https://gitlab.com/imapps/kivo/compare/v1.0.0...v1.0.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* allow bcrypt native binding compilation in Docker ([98c35a8](https://gitlab.com/imapps/kivo/commit/98c35a8c4a0c39d7b1bcf5fde8eb310db5760b17))
+* make husky prepare script fail gracefully ([783742e](https://gitlab.com/imapps/kivo/commit/783742edf692d1a58ac500a061a1e0d97a1c23d5))
+
 # 1.0.0 (2025-10-14)
 
 
