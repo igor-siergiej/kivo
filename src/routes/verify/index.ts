@@ -26,9 +26,23 @@ export const verify = async (ctx: Context) => {
 
         ctx.body = { success: true, payload };
     } catch (error) {
+        // Handle expected token expiration and invalid tokens without logging errors
+        if (error instanceof jwt.TokenExpiredError) {
+            ctx.status = 401;
+            ctx.body = { success: false, message: 'Token expired' };
+            return;
+        }
+
+        if (error instanceof jwt.JsonWebTokenError) {
+            ctx.status = 401;
+            ctx.body = { success: false, message: 'Invalid token' };
+            return;
+        }
+
+        // Log unexpected errors
         const logger = dependencyContainer.resolve(DependencyToken.Logger);
         logger.error('Error verifying token', error);
-        ctx.status = 401;
-        ctx.body = { success: false, message: 'Invalid or expired token' };
+        ctx.status = 500;
+        ctx.body = { success: false, message: 'Internal server error' };
     }
 };

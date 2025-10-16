@@ -98,9 +98,23 @@ export const refresh = async (ctx: Context) => {
             accessToken: newAccessToken,
         };
     } catch (error) {
+        // Handle expected token expiration separately from unexpected errors
+        if (error instanceof jwt.TokenExpiredError) {
+            ctx.status = 403;
+            ctx.body = { success: false, message: 'Refresh token expired' };
+            return;
+        }
+
+        if (error instanceof jwt.JsonWebTokenError) {
+            ctx.status = 401;
+            ctx.body = { success: false, message: 'Invalid refresh token' };
+            return;
+        }
+
+        // Log unexpected errors
         const logger = dependencyContainer.resolve(DependencyToken.Logger);
         logger.error('Error refreshing token', error);
-        ctx.status = 401;
-        ctx.body = { success: false, message: 'Invalid or expired refresh token' };
+        ctx.status = 500;
+        ctx.body = { success: false, message: 'Internal server error' };
     }
 };
