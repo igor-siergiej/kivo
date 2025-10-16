@@ -6,7 +6,7 @@
   "author": "Igor Siergiej <igorsiergiej@gmail.com>",
   "scripts": {
     "start": "bun --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir build --target=bun --external bcrypt --external mongodb",
+    "build": "bun build src/index.ts --outdir build --target=bun --external bcryptjs --external mongodb",
     "lint": "biome check .",
     "lint:fix": "biome check --fix --unsafe .",
     "format": "biome format --write .",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@imapps/api-utils": "^0.3.0",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
     "koa": "^2.16.0",
     "koa-body": "^6.0.1",
@@ -31,7 +31,7 @@
     "@imapps/biome-config": "^0.3.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@types/bcrypt": "^5.0.0",
+    "@types/bcryptjs": "^3.0.0",
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/koa": "^2.15.0",
