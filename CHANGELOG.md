@@ -1,3 +1,10 @@
+# [1.1.0](https://gitlab.com/imapps/kivo/compare/v1.0.4...v1.1.0) (2025-10-16)
+
+
+### Features
+
+* handle token expiration properly ([2e01fd1](https://gitlab.com/imapps/kivo/commit/2e01fd1c1c2cc1adaf48eaf63693b91d724268f5))
+
 ## [1.0.4](https://gitlab.com/imapps/kivo/compare/v1.0.3...v1.0.4) (2025-10-14)
 
 
