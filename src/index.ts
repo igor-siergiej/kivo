@@ -40,7 +40,6 @@ const bodyOptions = {
 
 export const onStartup = async () => {
     try {
-        // Register dependencies first, before any code that might need them
         registerDepdendencies();
 
         const app = new Koa();
