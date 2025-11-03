@@ -1,3 +1,10 @@
+# [1.2.0](https://gitlab.com/imapps/kivo/compare/v1.1.0...v1.2.0) (2025-11-03)
+
+
+### Features
+
+* add updated pipelines with tags script ([6303a50](https://gitlab.com/imapps/kivo/commit/6303a503982ead06cf2c98dc68a7f06e65d6a3cd))
+
 # [1.1.0](https://gitlab.com/imapps/kivo/compare/v1.0.4...v1.1.0) (2025-10-16)
 
 
