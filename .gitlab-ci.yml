@@ -5,8 +5,6 @@ include:
 
 variables:
   PROJECT_NAME: "kivo"
-  APP_NAME: "kivo"
-  DOCKERFILE_PATH: "Dockerfile"
 
 # CI job - extends the Bun template
 ci:
