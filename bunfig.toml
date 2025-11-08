@@ -1,2 +1,6 @@
 [install.scopes]
 "@imapps" = { url = "https://gitlab.com/api/v4/groups/116310254/-/packages/npm/" }
+
+[run]
+# Load .env.dev for development environment variables
+preload = [".env.dev"]
