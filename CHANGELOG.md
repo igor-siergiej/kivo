@@ -1,3 +1,15 @@
+# [1.3.0](https://gitlab.com/imapps/kivo/compare/v1.2.0...v1.3.0) (2025-11-18)
+
+
+### Bug Fixes
+
+* just commit .env ([f4d37c8](https://gitlab.com/imapps/kivo/commit/f4d37c87db126ba171a9af82b4cfd1bfd7ee7ef2))
+
+
+### Features
+
+* publish new version ([a82a9b6](https://gitlab.com/imapps/kivo/commit/a82a9b6aae82132a1cec93170016245280e67d4a))
+
 # [1.2.0](https://gitlab.com/imapps/kivo/compare/v1.1.0...v1.2.0) (2025-11-03)
 
 
