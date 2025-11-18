@@ -69,7 +69,7 @@ export const onStartup = async () => {
                 duration: 60 * 1000,
                 errorMessage: 'Too many requests, please slow down.',
                 id: (ctx: Context) => ctx.ip,
-                max: 50,
+                max: 55,
             })
         );
         app.use(koaCors(corsOptions));
