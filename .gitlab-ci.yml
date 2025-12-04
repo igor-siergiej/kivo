@@ -5,6 +5,16 @@ include:
 
 variables:
   PROJECT_NAME: "kivo"
+  # Disable TLS for Docker-in-Docker
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_TLS_VERIFY: ""
+  # Additional variables to ensure TLS is disabled
+  DOCKER_CERT_PATH: ""
+  DOCKER_TLS_CA_CERT: ""
+  # Use cluster-internal registry DNS name
+  CI_REGISTRY: "registry.registry.svc.cluster.local:5000"
+  REGISTRY_URL: "registry.registry.svc.cluster.local:5000"
 
 # CI job - extends the Bun template
 ci:
@@ -27,9 +37,15 @@ version-release:
 # Build kivo Docker image (test build with SHA tag)
 docker-build:
   extends: .docker-build-template
+  before_script:
+    - until docker info; do sleep 1; done
   variables:
     APP_NAME: "kivo"
     DOCKERFILE_PATH: "Dockerfile"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_TLS_VERIFY: ""
+    DOCKER_CERT_PATH: ""
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
@@ -38,9 +54,14 @@ docker-build:
 
 # Publish kivo Docker image with semantic version
 docker-publish:
-  extends: .docker-publish-template
+  extends: .docker-publish-rebuild-template
   variables:
     APP_NAME: "kivo"
+    DOCKERFILE_PATH: "Dockerfile"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_TLS_VERIFY: ""
+    DOCKER_CERT_PATH: ""
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
