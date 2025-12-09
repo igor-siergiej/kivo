@@ -71,9 +71,9 @@ docker-publish:
 
 # Update staging environment automatically
 gitops-staging:
-  extends: .gitops-staging-template
+  extends: .gitops-staging-helm-template
   variables:
-    APP_IMAGES: "kivo:kivo"
+    HELM_VALUES: "apps/kivo/base/values.yaml,image.tag"
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
@@ -83,9 +83,9 @@ gitops-staging:
 
 # Manual production deployment
 gitops-production:
-  extends: .production-deploy-template
+  extends: .production-deploy-helm-template
   variables:
-    APP_IMAGES: "kivo:kivo"
+    HELM_VALUES: "apps/kivo/overlays/production/patch-deployment.yaml,image.tag"
   needs:
     - version-release
     - gitops-staging
