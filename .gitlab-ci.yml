@@ -73,7 +73,7 @@ docker-publish:
 gitops-staging:
   extends: .gitops-staging-helm-template
   variables:
-    HELM_VALUES: "apps/kivo/base/values.yaml,image.tag"
+    HELM_VALUES: "apps/workloads/kivo/values.yaml,image.tag;apps/workloads/kivo/values-staging.yaml,image.tag"
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
@@ -85,7 +85,7 @@ gitops-staging:
 gitops-production:
   extends: .production-deploy-helm-template
   variables:
-    HELM_VALUES: "apps/kivo/overlays/production/patch-deployment.yaml,image.tag"
+    HELM_VALUES: "apps/workloads/kivo/values.yaml,image.tag;apps/workloads/kivo/values-production.yaml,image.tag"
   needs:
     - version-release
     - gitops-staging
