@@ -1,3 +1,10 @@
+# [1.4.0](https://gitlab.com/imapps/kivo/compare/v1.3.0...v1.4.0) (2025-12-18)
+
+
+### Features
+
+* add comprehensive audit logging to kivo authentication service ([fabd3d5](https://gitlab.com/imapps/kivo/commit/fabd3d510ab660905dcb007241f8eef9ee58fbfe))
+
 # [1.3.0](https://gitlab.com/imapps/kivo/compare/v1.2.0...v1.3.0) (2025-11-18)
 
 
