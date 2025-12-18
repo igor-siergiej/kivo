@@ -5,9 +5,11 @@ import { DependencyToken } from '../../lib/dependencyContainer/types';
 
 export const search = async (ctx: Context) => {
     const { q: query, limit = '10' } = ctx.query as { q?: string; limit?: string };
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     // Input validation and sanitization
     if (!query || typeof query !== 'string') {
+        logger.warn('User search with missing or invalid query parameter');
         ctx.status = 400;
         ctx.body = { success: false, message: 'Query parameter "q" is required and must be a string' };
         return;
@@ -16,12 +18,14 @@ export const search = async (ctx: Context) => {
     // Sanitize and validate query length
     const sanitizedQuery = query.trim().toLowerCase();
     if (sanitizedQuery.length < 2) {
+        logger.warn('User search with query too short', { queryLength: sanitizedQuery.length });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Query must be at least 2 characters long' };
         return;
     }
 
     if (sanitizedQuery.length > 50) {
+        logger.warn('User search with query too long', { queryLength: sanitizedQuery.length });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Query too long (max 50 characters)' };
         return;
@@ -30,6 +34,7 @@ export const search = async (ctx: Context) => {
     // Validate and parse limit
     const parsedLimit = parseInt(limit, 10);
     if (Number.isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
+        logger.warn('User search with invalid limit', { limit });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Limit must be between 1 and 20' };
         return;
@@ -38,6 +43,7 @@ export const search = async (ctx: Context) => {
     // Rate limiting check (you can enhance this with your existing rate limiting middleware)
     const clientIP = ctx.ip || ctx.request.ip;
     if (!clientIP) {
+        logger.warn('User search with no client IP detected');
         ctx.status = 429;
         ctx.body = { success: false, message: 'Too many requests' };
         return;
@@ -78,6 +84,12 @@ export const search = async (ctx: Context) => {
 
         const usernames = results.map((user) => user.username);
 
+        logger.info('User search completed', {
+            query: sanitizedQuery,
+            resultsCount: usernames.length,
+            limit: parsedLimit,
+        });
+
         ctx.set('Cache-Control', 'public, max-age=30');
         ctx.set('X-Query-Time', Date.now().toString());
 
@@ -88,8 +100,7 @@ export const search = async (ctx: Context) => {
             query: sanitizedQuery,
         };
     } catch (error) {
-        const logger = dependencyContainer.resolve(DependencyToken.Logger);
-        logger.error('Search error', error);
+        logger.error('User search error', error);
         ctx.status = 500;
         ctx.body = { success: false, message: 'Internal server error' };
     }

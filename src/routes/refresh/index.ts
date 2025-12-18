@@ -10,6 +10,7 @@ const hashToken = (token: string) => crypto.createHash('sha256').update(token).d
 
 export const refresh = async (ctx: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
     const jwtSecret = config.get('jwtSecret');
     const accessTokenExpiry = config.get('accessTokenExpiry');
     const refreshTokenExpiry = config.get('refreshTokenExpiry');
@@ -19,6 +20,7 @@ export const refresh = async (ctx: Context) => {
     const refreshToken = ctx.cookies.get('refreshToken');
 
     if (!refreshToken) {
+        logger.warn('Token refresh attempt with missing refresh token');
         ctx.status = 400;
         ctx.body = { success: false, message: 'refreshToken cookie missing' };
         return;
@@ -27,6 +29,7 @@ export const refresh = async (ctx: Context) => {
     try {
         const payload = jwt.verify(refreshToken, jwtSecret) as { sub: string; aud?: string };
         if (payload.aud !== 'kivo') {
+            logger.warn('Token refresh failed: invalid audience', { audience: payload.aud });
             ctx.status = 401;
             ctx.body = { success: false, message: 'Invalid session' };
             return;
@@ -41,6 +44,7 @@ export const refresh = async (ctx: Context) => {
         const session = await sessionsCollection.findOne({ tokenHash, username });
 
         if (!session) {
+            logger.warn('Token refresh failed: session not found', { username });
             ctx.status = 401;
             ctx.body = { success: false, message: 'Invalid session' };
             return;
@@ -51,6 +55,7 @@ export const refresh = async (ctx: Context) => {
         const user = await usersCollection.findOne({ username });
 
         if (!user) {
+            logger.warn('Token refresh failed: user not found', { username });
             ctx.status = 401;
             ctx.body = { success: false, message: 'Authentication failed' };
             return;
@@ -82,6 +87,8 @@ export const refresh = async (ctx: Context) => {
         });
         await sessionsCollection.deleteOne({ _id: session._id });
 
+        logger.info('Token refreshed successfully', { username });
+
         // Prevent caching of sensitive token response
         ctx.set('Cache-Control', 'no-store');
         ctx.set('Pragma', 'no-cache');
@@ -100,19 +107,22 @@ export const refresh = async (ctx: Context) => {
     } catch (error) {
         // Handle expected token expiration separately from unexpected errors
         if (error instanceof jwt.TokenExpiredError) {
+            logger.warn('Token refresh failed: refresh token expired');
             ctx.status = 403;
             ctx.body = { success: false, message: 'Refresh token expired' };
             return;
         }
 
         if (error instanceof jwt.JsonWebTokenError) {
+            logger.warn('Token refresh failed: invalid refresh token', {
+                error: error.message,
+            });
             ctx.status = 401;
             ctx.body = { success: false, message: 'Invalid refresh token' };
             return;
         }
 
         // Log unexpected errors
-        const logger = dependencyContainer.resolve(DependencyToken.Logger);
         logger.error('Error refreshing token', error);
         ctx.status = 500;
         ctx.body = { success: false, message: 'Internal server error' };

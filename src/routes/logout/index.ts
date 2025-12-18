@@ -8,7 +8,10 @@ const hashToken = (token: string) => crypto.createHash('sha256').update(token).d
 
 export const logout = async (ctx: Context) => {
     const refreshToken = ctx.cookies.get('refreshToken');
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
+
     if (!refreshToken) {
+        logger.warn('Logout attempt with missing refresh token');
         ctx.status = 400;
         ctx.body = { success: false, message: 'refreshToken cookie missing' };
         return;
@@ -22,7 +25,9 @@ export const logout = async (ctx: Context) => {
 
     const tokenHash = hashToken(refreshToken);
 
-    await sessionsCollection.deleteOne({ tokenHash });
+    const result = await sessionsCollection.deleteOne({ tokenHash });
+
+    logger.info('User logout successful', { deletedSessionCount: result.deletedCount });
 
     // Clear refresh token cookie
     ctx.cookies.set('refreshToken', '', {

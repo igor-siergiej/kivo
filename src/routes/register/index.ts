@@ -11,8 +11,13 @@ const hashToken = (token: string) => crypto.createHash('sha256').update(token).d
 
 export const register = async (ctx: Context) => {
     const { username, password } = ctx.request.body as { username?: string; password?: string };
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
+        logger.warn('Registration attempt with missing credentials', {
+            username: username || 'missing',
+            hasPassword: !!password,
+        });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Username and password are required' };
         return;
@@ -21,6 +26,7 @@ export const register = async (ctx: Context) => {
     // TODO: move this to use an acutal library or something
     // Simple password strength check (at least 8 chars incl num/letter)
     if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
+        logger.warn('Registration attempt with weak password', { username });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Password too weak' };
         return;
@@ -38,6 +44,7 @@ export const register = async (ctx: Context) => {
 
     const existing = await usersCollection.findOne({ username });
     if (existing) {
+        logger.warn('Registration attempt with existing username', { username });
         ctx.status = 400;
         ctx.body = { success: false, message: 'This username is already taken' };
         return;
@@ -60,6 +67,8 @@ export const register = async (ctx: Context) => {
     const sessionsCollection = database.getCollection('sessions');
     const tokenHash = hashToken(refreshToken);
     await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
+
+    logger.info('User registration successful', { username, userId: result.insertedId });
 
     // Set cookie
     ctx.cookies.set('refreshToken', refreshToken, {

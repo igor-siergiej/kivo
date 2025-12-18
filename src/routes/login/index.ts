@@ -17,8 +17,13 @@ const hashToken = (token: string) => crypto.createHash('sha256').update(token).d
 
 export const login = async (ctx: Context) => {
     const { username, password } = ctx.request.body as { username?: string; password?: string };
+    const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
+        logger.warn('Login attempt with missing credentials', {
+            username: username || 'missing',
+            hasPassword: !!password,
+        });
         ctx.status = 400;
         ctx.body = { success: false, message: 'Username and password are required' };
         return;
@@ -30,16 +35,17 @@ export const login = async (ctx: Context) => {
     const user = (await usersCollection.findOne({ username })) as IUser | null;
 
     if (!user) {
+        logger.warn('Login attempt with non-existent user', { username });
         ctx.status = 401;
         ctx.body = { success: false, message: 'Invalid username or password' };
         return;
-    } else {
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) {
-            ctx.status = 401;
-            ctx.body = { success: false, message: 'Invalid username or password' };
-            return;
-        }
+    }
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+        logger.warn('Login attempt with invalid password', { username });
+        ctx.status = 401;
+        ctx.body = { success: false, message: 'Invalid username or password' };
+        return;
     }
 
     const config = dependencyContainer.resolve(DependencyToken.Config);
@@ -59,6 +65,8 @@ export const login = async (ctx: Context) => {
     const sessionsCollection = database.getCollection('sessions');
     const tokenHash = hashToken(refreshToken);
     await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
+
+    logger.info('User login successful', { username, userId: user._id });
 
     ctx.cookies.set('refreshToken', refreshToken, {
         httpOnly: true,
