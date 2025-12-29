@@ -8,3 +8,8 @@ tsconfig.tsbuildinfo
 .yarnrc.yml
 .pnp.*
 .vscode
+
+# SECURITY: Never commit environment files with credentials
+.env
+.env.local
+.env.*.local
