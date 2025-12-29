@@ -1,3 +1,10 @@
+## [1.4.1](https://gitlab.com/imapps/kivo/compare/v1.4.0...v1.4.1) (2025-12-29)
+
+
+### Bug Fixes
+
+* add .env to .gitignore to prevent credential leaks ([98131d4](https://gitlab.com/imapps/kivo/commit/98131d4115bbbf3f73ac7b35e5c6dd997bd31c57))
+
 # [1.4.0](https://gitlab.com/imapps/kivo/compare/v1.3.0...v1.4.0) (2025-12-18)
 
 
