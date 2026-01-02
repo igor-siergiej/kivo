@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-import type { Context } from 'koa';
-import type { Next } from 'koa';
+import type { Context, Next } from 'koa';
 
 import { dependencyContainer } from '../dependencies';
 import { DependencyToken } from '../lib/dependencyContainer/types';
