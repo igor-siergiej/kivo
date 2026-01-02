@@ -1,3 +1,10 @@
+## [1.5.1](https://gitlab.com/imapps/kivo/compare/v1.5.0...v1.5.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* add diagnostic logging for route registration ([590160d](https://gitlab.com/imapps/kivo/commit/590160d3389221a8ba90fa84dfbaef075db5108f))
+
 # [1.5.0](https://gitlab.com/imapps/kivo/compare/v1.4.1...v1.5.0) (2026-01-02)
 
 
