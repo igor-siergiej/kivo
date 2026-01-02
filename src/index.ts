@@ -85,6 +85,14 @@ export const onStartup = async () => {
             })
         );
         app.use(koaCors(corsOptions));
+        // Explicit handler for OPTIONS preflight requests
+        app.use(async (ctx, next) => {
+            if (ctx.method === 'OPTIONS') {
+                ctx.status = 200;
+            } else {
+                await next();
+            }
+        });
         app.use(koaLogger);
         app.use(koaBody(bodyOptions));
         app.use(async (ctx, next) => {
