@@ -145,7 +145,9 @@ export const onStartup = async () => {
         });
         logger.info('Database indexes created');
 
+        // Register routes and log available endpoints for debugging
         app.use(routes.routes());
+        logger.info('Routes registered successfully');
 
         app.listen(config.get('port'), () => {
             logger.info(`Kivo authentication service running on port ${config.get('port')}`);
