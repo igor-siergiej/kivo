@@ -37,7 +37,7 @@ const koaLogger = KoaLogger();
 const corsOptions: Options = {
     origin: (request: Request) => {
         const originHeader = request.headers.origin || '';
-        return allowedOrigins.includes(originHeader) ? originHeader : '*';
+        return allowedOrigins.includes(originHeader) ? originHeader : false;
     },
     methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,

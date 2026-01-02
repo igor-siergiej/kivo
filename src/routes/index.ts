@@ -1,5 +1,6 @@
 import Router from 'koa-router';
 
+import { authenticate } from '../middleware/auth';
 import { login } from './login';
 import { logout } from './logout';
 import { refresh } from './refresh';
@@ -26,8 +27,8 @@ router.get('/verify', verify);
 
 router.post('/refresh', refresh);
 
-router.post('/logout', logout);
+router.post('/logout', authenticate, logout);
 
-router.post('/users', getUsersByUsernames);
+router.post('/users', authenticate, getUsersByUsernames);
 
 export default router;
