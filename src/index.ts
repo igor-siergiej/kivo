@@ -11,14 +11,26 @@ import { DependencyToken } from './lib/dependencyContainer/types';
 import routes from './routes';
 import { HttpErrorCode } from './types';
 
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:4000',
-    'http://shoppingo.imapps.staging',
-    'http://jewellerycatalogue.imapps.staging',
-    'https://jewellerycatalogue.imapps.co.uk',
-    'https://shoppingo.imapps.co.uk',
-];
+const getDefaultAllowedOrigins = () => {
+    const origins = [
+        'http://localhost:3000',
+        'http://localhost:4000',
+        'http://shoppingo.imapps.staging',
+        'http://jewellerycatalogue.imapps.staging',
+        'https://jewellerycatalogue.imapps.co.uk',
+        'https://shoppingo.imapps.co.uk',
+    ];
+
+    // Add CORS_ORIGIN from environment if provided
+    const corsOrigin = process.env.CORS_ORIGIN;
+    if (corsOrigin && !origins.includes(corsOrigin)) {
+        origins.push(corsOrigin);
+    }
+
+    return origins;
+};
+
+const allowedOrigins = getDefaultAllowedOrigins();
 
 const koaLogger = KoaLogger();
 
@@ -27,9 +39,9 @@ const corsOptions: Options = {
         const originHeader = request.headers.origin || '';
         return allowedOrigins.includes(originHeader) ? originHeader : '*';
     },
-    methods: ['POST'],
+    methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-    headers: ['Content-Type'],
+    headers: ['Content-Type', 'Authorization', 'Origin'],
 };
 
 const bodyOptions = {
