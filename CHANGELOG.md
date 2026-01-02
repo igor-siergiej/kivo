@@ -1,3 +1,10 @@
+# [1.5.0](https://gitlab.com/imapps/kivo/compare/v1.4.1...v1.5.0) (2026-01-02)
+
+
+### Features
+
+* fix linting in security updates ([ccd7319](https://gitlab.com/imapps/kivo/commit/ccd73191f7f534cff1c66023d4877566cf08a452))
+
 ## [1.4.1](https://gitlab.com/imapps/kivo/compare/v1.4.0...v1.4.1) (2025-12-29)
 
 
