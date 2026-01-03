@@ -35,7 +35,10 @@ export const onStartup = async () => {
         }
 
         // Setup CORS configuration from environment
-        const corsOriginsList = config.get('corsAllowedOrigins').split(',').map((o) => o.trim());
+        const corsOriginsList = config
+            .get('corsAllowedOrigins')
+            .split(',')
+            .map((o) => o.trim());
         const corsOptions: Options = {
             origin: (request: Request) => {
                 const originHeader = request.headers.origin || '';
