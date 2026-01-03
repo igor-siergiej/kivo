@@ -55,7 +55,7 @@ export const login = async (ctx: Context) => {
     const secure = config.get('secure');
     const sameSite = config.get('sameSite');
 
-    const tokenPayload = { sub: username, username, id: user._id, aud: 'kivo' };
+    const tokenPayload = { sub: username, username, id: user._id.toString(), aud: 'kivo' };
     const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as jwt.SignOptions);
     const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as jwt.SignOptions);
 

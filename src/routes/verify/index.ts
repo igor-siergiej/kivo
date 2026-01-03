@@ -19,7 +19,7 @@ export const verify = async (ctx: Context) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const payload = jwt.verify(token, config.get('jwtSecret')) as { aud?: string; username?: string };
+        const payload = jwt.verify(token, config.get('jwtSecret')) as { aud?: string; username?: string; id?: string };
         if (payload.aud !== 'kivo') {
             logger.warn('Token verification failed: invalid audience', { audience: payload.aud });
             ctx.status = 401;
@@ -28,7 +28,7 @@ export const verify = async (ctx: Context) => {
         }
 
         logger.info('Token verified successfully', { username: payload.username });
-        ctx.body = { success: true, payload };
+        ctx.body = { success: true, payload: { id: payload.id, username: payload.username } };
     } catch (error) {
         // Handle expected token expiration and invalid tokens without logging errors
         if (error instanceof jwt.TokenExpiredError) {
