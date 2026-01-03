@@ -1,3 +1,16 @@
+# [1.6.0](https://gitlab.com/imapps/kivo/compare/v1.5.1...v1.6.0) (2026-01-03)
+
+
+### Bug Fixes
+
+* ensure user ID is consistently formatted as string across authentication flow ([6af813e](https://gitlab.com/imapps/kivo/commit/6af813e120d1c304d262f2518c901b9be751a099))
+* resolve Kivo route 404 errors and make CORS configuration dynamic ([14c63d6](https://gitlab.com/imapps/kivo/commit/14c63d6da51ba57f2b77ead5fbdfab87e1bcceac))
+
+
+### Features
+
+* make CORS no-origin request behavior configurable ([b498f3b](https://gitlab.com/imapps/kivo/commit/b498f3b44fa2802631ac222c78d860af4ce598e1))
+
 ## [1.5.1](https://gitlab.com/imapps/kivo/compare/v1.5.0...v1.5.1) (2026-01-02)
 
 
