@@ -27,7 +27,7 @@ router.get('/verify', verify);
 
 router.post('/refresh', refresh);
 
-router.post('/logout', authenticate, logout);
+router.post('/logout', logout);
 
 router.post('/users', getUsersByUsernames);
 
