@@ -11,6 +11,7 @@ const hashToken = (token: string) => crypto.createHash('sha256').update(token).d
 export const refresh = async (ctx: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
+    console.log('refreshing token');
     const jwtSecret = config.get('jwtSecret');
     const accessTokenExpiry = config.get('accessTokenExpiry');
     const refreshTokenExpiry = config.get('refreshTokenExpiry');

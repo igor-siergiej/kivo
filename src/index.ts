@@ -11,38 +11,7 @@ import { DependencyToken } from './lib/dependencyContainer/types';
 import routes from './routes';
 import { HttpErrorCode } from './types';
 
-const getDefaultAllowedOrigins = () => {
-    const origins = [
-        'http://localhost:3000',
-        'http://localhost:4000',
-        'http://shoppingo.imapps.staging',
-        'http://jewellerycatalogue.imapps.staging',
-        'https://jewellerycatalogue.imapps.co.uk',
-        'https://shoppingo.imapps.co.uk',
-    ];
-
-    // Add CORS_ORIGIN from environment if provided
-    const corsOrigin = process.env.CORS_ORIGIN;
-    if (corsOrigin && !origins.includes(corsOrigin)) {
-        origins.push(corsOrigin);
-    }
-
-    return origins;
-};
-
-const allowedOrigins = getDefaultAllowedOrigins();
-
 const koaLogger = KoaLogger();
-
-const corsOptions: Options = {
-    origin: (request: Request) => {
-        const originHeader = request.headers.origin || '';
-        return allowedOrigins.includes(originHeader) ? originHeader : false;
-    },
-    methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
-    headers: ['Content-Type', 'Authorization', 'Origin'],
-};
 
 const bodyOptions = {
     formidable: {
@@ -57,6 +26,32 @@ export const onStartup = async () => {
         const app = new Koa();
         app.proxy = true;
 
+        const database = dependencyContainer.resolve(DependencyToken.Database);
+        const config = dependencyContainer.resolve(DependencyToken.Config);
+        const logger = dependencyContainer.resolve(DependencyToken.Logger);
+
+        if (!database || !config) {
+            throw new Error('Could not resolve database or config dependencies');
+        }
+
+        // Setup CORS configuration from environment
+        const corsOriginsList = config.get('corsAllowedOrigins').split(',').map((o) => o.trim());
+        const corsOptions: Options = {
+            origin: (request: Request) => {
+                const originHeader = request.headers.origin || '';
+                // Allow requests without origin header (localhost development)
+                // or from whitelisted origins
+                if (!originHeader || corsOriginsList.includes(originHeader)) {
+                    return originHeader || true;
+                }
+                return false;
+            },
+            methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+            credentials: true,
+            headers: ['Content-Type', 'Authorization', 'Origin'],
+        };
+
+        // Setup middleware
         app.use(async (ctx, next) => {
             const cfVisitor = ctx.headers['cf-visitor'];
             if (cfVisitor) {
@@ -85,14 +80,6 @@ export const onStartup = async () => {
             })
         );
         app.use(koaCors(corsOptions));
-        // Explicit handler for OPTIONS preflight requests
-        app.use(async (ctx, next) => {
-            if (ctx.method === 'OPTIONS') {
-                ctx.status = 200;
-            } else {
-                await next();
-            }
-        });
         app.use(koaLogger);
         app.use(koaBody(bodyOptions));
         app.use(async (ctx, next) => {
@@ -109,25 +96,13 @@ export const onStartup = async () => {
         });
 
         app.on('error', (err, ctx) => {
-            const logger = dependencyContainer.resolve(DependencyToken.Logger);
-
-            if (logger) {
-                logger.error('Server Error', {
-                    message: err.message,
-                    stack: err.stack,
-                    path: ctx.request.path,
-                    method: ctx.request.method,
-                });
-            }
+            logger.error('Server Error', {
+                message: err.message,
+                stack: err.stack,
+                path: ctx.request.path,
+                method: ctx.request.method,
+            });
         });
-
-        const database = dependencyContainer.resolve(DependencyToken.Database);
-        const config = dependencyContainer.resolve(DependencyToken.Config);
-        const logger = dependencyContainer.resolve(DependencyToken.Logger);
-
-        if (!database || !config) {
-            throw new Error('Could not resolve database or config dependencies');
-        }
 
         logger.info('Starting Kivo authentication service - connecting to database');
         await database.connect({
@@ -145,9 +120,17 @@ export const onStartup = async () => {
         });
         logger.info('Database indexes created');
 
-        // Register routes and log available endpoints for debugging
+        // Register routes
         app.use(routes.routes());
+        app.use(routes.allowedMethods());
         logger.info('Routes registered successfully');
+
+        // Fallback 404 handler
+        app.use(async (ctx) => {
+            logger.warn('Route not found', { method: ctx.method, path: ctx.path });
+            ctx.status = 404;
+            ctx.body = { error: 'Not Found' };
+        });
 
         app.listen(config.get('port'), () => {
             logger.info(`Kivo authentication service running on port ${config.get('port')}`);

@@ -9,6 +9,7 @@ const schema = {
     refreshTokenExpiry: { parser: parsers.string, from: 'REFRESH_TOKEN_EXPIRY' },
     secure: { parser: parsers.boolean, from: 'SECURE' },
     sameSite: { parser: parsers.string, from: 'SAME_SITE' },
+    corsAllowedOrigins: { parser: parsers.string, from: 'CORS_ALLOWED_ORIGINS', defaultValue: 'http://localhost:3000,http://localhost:4000' },
 } as const;
 
 export const config = new BaseConfigService(schema);
