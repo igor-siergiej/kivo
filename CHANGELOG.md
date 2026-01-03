@@ -1,3 +1,11 @@
+## [1.6.1](https://gitlab.com/imapps/kivo/compare/v1.6.0...v1.6.1) (2026-01-03)
+
+
+### Bug Fixes
+
+* remove authentication requirement from /users endpoint ([aa9244d](https://gitlab.com/imapps/kivo/commit/aa9244d4f0b1e0e34761fd208cefad4e52e799f6))
+* remove authentication requirement from logout endpoint ([9825f79](https://gitlab.com/imapps/kivo/commit/9825f798ff73b79e5097f6b6a0df1b8414576953))
+
 # [1.6.0](https://gitlab.com/imapps/kivo/compare/v1.5.1...v1.6.0) (2026-01-03)
 
 
