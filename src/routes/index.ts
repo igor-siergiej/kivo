@@ -29,6 +29,6 @@ router.post('/refresh', refresh);
 
 router.post('/logout', authenticate, logout);
 
-router.post('/users', authenticate, getUsersByUsernames);
+router.post('/users', getUsersByUsernames);
 
 export default router;
