@@ -14,6 +14,11 @@ const schema = {
         from: 'CORS_ALLOWED_ORIGINS',
         defaultValue: 'http://localhost:3000,http://localhost:4000',
     },
+    corsAllowNoOrigin: {
+        parser: parsers.boolean,
+        from: 'CORS_ALLOW_NO_ORIGIN',
+        defaultValue: true,
+    },
 } as const;
 
 export const config = new BaseConfigService(schema);

@@ -39,14 +39,23 @@ export const onStartup = async () => {
             .get('corsAllowedOrigins')
             .split(',')
             .map((o) => o.trim());
+        const corsAllowNoOrigin = config.get('corsAllowNoOrigin');
         const corsOptions: Options = {
             origin: (request: Request) => {
                 const originHeader = request.headers.origin || '';
-                // Allow requests without origin header (localhost development)
-                // or from whitelisted origins
-                if (!originHeader || corsOriginsList.includes(originHeader)) {
-                    return originHeader || true;
+                const isWhitelisted = corsOriginsList.includes(originHeader);
+                const hasNoOrigin = !originHeader;
+
+                // Allow whitelisted origins
+                if (isWhitelisted) {
+                    return originHeader;
                 }
+
+                // Allow requests without origin header only if configured
+                if (hasNoOrigin && corsAllowNoOrigin) {
+                    return true;
+                }
+
                 return false;
             },
             methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
