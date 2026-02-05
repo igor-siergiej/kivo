@@ -50,35 +50,44 @@ export const register = async (ctx: Context) => {
         return;
     }
 
-    const saltRounds = 14;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-    const result = await usersCollection.insertOne({ _id: new ObjectId(), username, passwordHash });
+    try {
+        const saltRounds = 14;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+        const result = await usersCollection.insertOne({ _id: new ObjectId(), username, passwordHash });
 
-    // generate tokens
-    const tokenPayload = { sub: username, username, id: result.insertedId, aud: 'kivo' };
-    const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as SignOptions);
-    const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as SignOptions);
+        // generate tokens
+        const tokenPayload = { sub: username, username, id: result.insertedId, aud: 'kivo' };
+        const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as SignOptions);
+        const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as SignOptions);
 
-    // Prevent caching of tokens
-    ctx.set('Cache-Control', 'no-store');
-    ctx.set('Pragma', 'no-cache');
+        // Prevent caching of tokens
+        ctx.set('Cache-Control', 'no-store');
+        ctx.set('Pragma', 'no-cache');
 
-    // Save session with hashed refresh token
-    const sessionsCollection = database.getCollection('sessions');
-    const tokenHash = hashToken(refreshToken);
-    await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
+        // Save session with hashed refresh token
+        const sessionsCollection = database.getCollection('sessions');
+        const tokenHash = hashToken(refreshToken);
+        await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
 
-    logger.info('User registration successful', { username, userId: result.insertedId });
+        logger.info('User registration successful', { username, userId: result.insertedId });
 
-    // Set cookie
-    ctx.cookies.set('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure,
-        sameSite,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+        // Set cookie
+        ctx.cookies.set('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure,
+            sameSite,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
 
-    ctx.body = {
-        accessToken,
-    };
+        ctx.body = {
+            accessToken,
+        };
+    } catch (error) {
+        logger.error('User registration failed', {
+            username,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        ctx.status = 500;
+        ctx.body = { success: false, message: 'Registration failed. Please try again.' };
+    }
 };

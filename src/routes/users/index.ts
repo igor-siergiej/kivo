@@ -31,10 +31,14 @@ export const getUsersByUsernames = async (ctx: Context) => {
             .project({ username: 1, _id: 1 })
             .toArray();
 
+        const foundUsernames = users.map((u) => u.username);
+        const notFoundUsernames = usernames.filter((u) => !foundUsernames.includes(u));
+
         logger.info('Users retrieved successfully', {
             requestedCount: usernames.length,
             foundCount: users.length,
-            usernames: users.map((u) => u.username),
+            usernames: foundUsernames,
+            notFoundUsernames,
         });
 
         ctx.body = {
@@ -43,13 +47,14 @@ export const getUsersByUsernames = async (ctx: Context) => {
                 id: user._id.toString(),
                 username: user.username,
             })),
+            notFoundUsernames,
         };
     } catch (error) {
         logger.error('Error fetching users', {
             requestedUsernames: usernames,
-            error,
+            error: error instanceof Error ? error.message : String(error),
         });
         ctx.status = 500;
-        ctx.body = { success: false, message: 'Internal server error' };
+        ctx.body = { success: false, message: 'Internal server error', notFoundUsernames: [] };
     }
 };
