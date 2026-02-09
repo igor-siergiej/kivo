@@ -1,3 +1,10 @@
+## [1.6.2](https://gitlab.com/imapps/kivo/compare/v1.6.1...v1.6.2) (2026-02-09)
+
+
+### Bug Fixes
+
+* improve error handling in user registration and user lookup ([f5f9b9c](https://gitlab.com/imapps/kivo/commit/f5f9b9c7ba0b52f0b30e8308737436830e260685))
+
 ## [1.6.1](https://gitlab.com/imapps/kivo/compare/v1.6.0...v1.6.1) (2026-01-03)
 
 
