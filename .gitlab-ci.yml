@@ -15,8 +15,8 @@ variables:
   # Use cluster-internal registry DNS name
   CI_REGISTRY: "registry.registry.svc.cluster.local:5000"
   REGISTRY_URL: "registry.registry.svc.cluster.local:5000"
-  # Use public Bun image for CI
-  CI_IMAGE: "oven/bun:1.1.38-alpine"
+  # Use public Bun image for CI (Debian-based, includes git and ca-certificates)
+  CI_IMAGE: "oven/bun:1.1.38"
 
 # CI job - extends the Bun template
 ci:
