@@ -12,11 +12,11 @@ variables:
   # Additional variables to ensure TLS is disabled
   DOCKER_CERT_PATH: ""
   DOCKER_TLS_CA_CERT: ""
-  # Use cluster-internal registry DNS name
-  CI_REGISTRY: "registry.registry.svc.cluster.local:5000"
-  REGISTRY_URL: "registry.registry.svc.cluster.local:5000"
-  # Use custom bun-git image from internal registry (includes git, ssh, ca-certificates)
-  CI_IMAGE: "registry.registry.svc.cluster.local:5000/bun-git:latest"
+  # Use TrueNAS registry (accessible from both inside and outside cluster)
+  CI_REGISTRY: "192.168.68.59:5000"
+  REGISTRY_URL: "192.168.68.59:5000"
+  # Use custom bun-git image (includes git, ssh, ca-certificates)
+  CI_IMAGE: "192.168.68.59:5000/bun-git:latest"
 
 # CI job - extends the Bun template
 ci:
