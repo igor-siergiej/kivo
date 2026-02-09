@@ -15,10 +15,13 @@ variables:
   # Use cluster-internal registry DNS name
   CI_REGISTRY: "registry.registry.svc.cluster.local:5000"
   REGISTRY_URL: "registry.registry.svc.cluster.local:5000"
+  # Use public Bun image for CI
+  CI_IMAGE: "oven/bun:1.1.38-alpine"
 
 # CI job - extends the Bun template
 ci:
   extends: .ci-bun-template
+  image: $CI_IMAGE
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -27,6 +30,7 @@ ci:
 # Version release - bump version and create tag after successful builds
 version-release:
   extends: .version-release-bun-template
+  image: $CI_IMAGE
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
