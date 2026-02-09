@@ -3,7 +3,14 @@ import type { Context, Next } from 'koa';
 const searchRateLimit = new Map<string, { count: number; resetTime: number }>();
 
 export const searchRateLimitMiddleware = async (ctx: Context, next: Next) => {
-    const clientIP = ctx.ip || ctx.request.ip || 'unknown';
+    // Get client IP from various sources (supports proxies, Cloudflare, etc)
+    const clientIP =
+        ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        ctx.request.headers['cf-connecting-ip'] ||
+        ctx.ip ||
+        ctx.request.ip ||
+        'unknown';
+
     const now = Date.now();
     const windowMs = 60 * 1000;
     const maxRequests = 30;

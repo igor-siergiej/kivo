@@ -1,6 +1,5 @@
 import Router from 'koa-router';
 
-import { authenticate } from '../middleware/auth';
 import { login } from './login';
 import { logout } from './logout';
 import { refresh } from './refresh';

@@ -40,29 +40,37 @@ export const search = async (ctx: Context) => {
         return;
     }
 
-    // Rate limiting check (you can enhance this with your existing rate limiting middleware)
-    const clientIP = ctx.ip || ctx.request.ip;
-    if (!clientIP) {
-        logger.warn('User search with no client IP detected');
-        ctx.status = 429;
-        ctx.body = { success: false, message: 'Too many requests' };
-        return;
-    }
+    // Client IP detection (already handled by rate limiting middleware)
+    // No additional IP check needed here as middleware handles rate limiting
 
     try {
         const database = dependencyContainer.resolve(DependencyToken.Database);
-        const usersCollection = database.getCollection('users');
+        if (!database) {
+            logger.error('Database service not available');
+            ctx.status = 503;
+            ctx.body = { success: false, message: 'Service unavailable' };
+            return;
+        }
 
-        const results = await usersCollection
-            .find(
-                { $text: { $search: sanitizedQuery } },
-                {
-                    projection: { username: 1, _id: 0, score: { $meta: 'textScore' } },
-                    limit: parsedLimit,
-                    sort: { score: { $meta: 'textScore' }, username: 1 },
-                }
-            )
-            .toArray();
+        const usersCollection = database.getCollection('users');
+        let results = [];
+
+        try {
+            // Try text search first
+            results = await usersCollection
+                .find(
+                    { $text: { $search: sanitizedQuery } },
+                    {
+                        projection: { username: 1, _id: 0, score: { $meta: 'textScore' } },
+                        limit: parsedLimit,
+                        sort: { score: { $meta: 'textScore' }, username: 1 },
+                    }
+                )
+                .toArray();
+        } catch (textSearchError) {
+            // Text search might fail if index doesn't exist, fall back to regex
+            logger.warn('Text search failed, falling back to regex', { error: textSearchError });
+        }
 
         if (results.length === 0) {
             const escapedQuery = sanitizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
