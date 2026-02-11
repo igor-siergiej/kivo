@@ -1,3 +1,10 @@
+## [1.6.4](https://gitlab.com/imapps/kivo/compare/v1.6.3...v1.6.4) (2026-02-11)
+
+
+### Bug Fixes
+
+* Override PRIVATE_REGISTRY to use external IP for CI runner ([7a69ed6](https://gitlab.com/imapps/kivo/commit/7a69ed6ed024e59eed6b0227b3716389462d7a6d))
+
 ## [1.6.3](https://gitlab.com/imapps/kivo/compare/v1.6.2...v1.6.3) (2026-02-11)
 
 
