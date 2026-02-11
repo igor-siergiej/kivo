@@ -5,6 +5,8 @@ include:
 
 variables:
   PROJECT_NAME: "kivo"
+  # Use external registry IP for CI runner (internal DNS not accessible from runner)
+  PRIVATE_REGISTRY: "192.168.68.59:5000"
   # Disable TLS for Docker-in-Docker
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
