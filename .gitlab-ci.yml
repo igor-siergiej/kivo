@@ -12,16 +12,10 @@ variables:
   # Additional variables to ensure TLS is disabled
   DOCKER_CERT_PATH: ""
   DOCKER_TLS_CA_CERT: ""
-  # Use TrueNAS registry (accessible from both inside and outside cluster)
-  CI_REGISTRY: "192.168.68.59:5000"
-  REGISTRY_URL: "192.168.68.59:5000"
-  # Use custom bun-git image (includes git, ssh, ca-certificates)
-  CI_IMAGE: "192.168.68.59:5000/bun-git:latest"
 
 # CI job - extends the Bun template
 ci:
   extends: .ci-bun-template
-  image: $CI_IMAGE
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -30,7 +24,6 @@ ci:
 # Version release - bump version and create tag after successful builds
 version-release:
   extends: .version-release-bun-template
-  image: $CI_IMAGE
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
@@ -82,7 +75,8 @@ gitops-staging:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"
     - if: $CI_PIPELINE_SOURCE == "web"
   needs:
-    - version-release
+    - job: version-release
+      artifacts: true
     - docker-publish
 
 # Manual production deployment
@@ -91,5 +85,6 @@ gitops-production:
   variables:
     HELM_VALUES: "apps/workloads/kivo/values.yaml,image.tag;apps/workloads/kivo/values-production.yaml,image.tag"
   needs:
-    - version-release
+    - job: version-release
+      artifacts: true
     - gitops-staging
