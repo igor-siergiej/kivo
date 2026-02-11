@@ -1,3 +1,10 @@
+## [1.6.3](https://gitlab.com/imapps/kivo/compare/v1.6.2...v1.6.3) (2026-02-11)
+
+
+### Bug Fixes
+
+* Set proper status codes in users endpoint ([947a012](https://gitlab.com/imapps/kivo/commit/947a0127edad1911826a3f13070f3cbd890fb6b1))
+
 ## [1.6.2](https://gitlab.com/imapps/kivo/compare/v1.6.1...v1.6.2) (2026-02-09)
 
 
