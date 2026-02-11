@@ -18,11 +18,20 @@ export const getUsersByUsernames = async (ctx: Context) => {
 
     if (usernames.length === 0) {
         logger.info('Get users request with empty usernames array');
+        ctx.status = 200;
         ctx.body = { success: true, users: [] };
         return;
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
+
+    if (!database) {
+        logger.error('Database service not available');
+        ctx.status = 503;
+        ctx.body = { success: false, message: 'Service unavailable' };
+        return;
+    }
+
     const usersCollection = database.getCollection('users');
 
     try {
