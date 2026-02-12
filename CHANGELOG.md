@@ -1,3 +1,10 @@
+# [1.7.0](https://gitlab.com/imapps/kivo/compare/v1.6.4...v1.7.0) (2026-02-12)
+
+
+### Features
+
+* Migrate from Koa to Elysia framework ([77cf469](https://gitlab.com/imapps/kivo/commit/77cf46967b11f8fbf39cde547ce64a199c47b950))
+
 ## [1.6.4](https://gitlab.com/imapps/kivo/compare/v1.6.3...v1.6.4) (2026-02-11)
 
 
