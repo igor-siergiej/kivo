@@ -47,7 +47,7 @@ export const onStartup = async () => {
             .get('corsAllowedOrigins')
             .split(',')
             .map((o: string) => o.trim());
-        const corsAllowNoOrigin = config.get('corsAllowNoOrigin');
+        const _corsAllowNoOrigin = config.get('corsAllowNoOrigin');
 
         const jwtSecret = config.get('jwtSecret');
         const secure = config.get('secure');
