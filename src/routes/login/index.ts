@@ -1,81 +1,104 @@
-import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import type { Context } from 'koa';
-import { ObjectId } from 'mongodb';
-
-import { dependencyContainer } from '../../dependencies';
-import { DependencyToken } from '../../lib/dependencyContainer/types';
+import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
+import { ObjectId } from "mongodb";
+import { dependencyContainer } from "../../dependencies.js";
+import { DependencyToken } from "../../lib/dependencyContainer/types.js";
 
 interface IUser {
-    _id?: ObjectId;
-    username: string;
-    passwordHash: string;
+	_id?: ObjectId;
+	username: string;
+	passwordHash: string;
 }
 
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+const hashToken = (token: string) =>
+	crypto.createHash("sha256").update(token).digest("hex");
 
-export const login = async (ctx: Context) => {
-    const { username, password } = ctx.request.body as { username?: string; password?: string };
-    const logger = dependencyContainer.resolve(DependencyToken.Logger);
+export const login = async ({ body, cookie, set }: any) => {
+	const { username, password } = body as {
+		username?: string;
+		password?: string;
+	};
+	const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-    if (!username || !password) {
-        logger.warn('Login attempt with missing credentials', {
-            username: username || 'missing',
-            hasPassword: !!password,
-        });
-        ctx.status = 400;
-        ctx.body = { success: false, message: 'Username and password are required' };
-        return;
-    }
+	if (!username || !password) {
+		logger.warn("Login attempt with missing credentials", {
+			username: username || "missing",
+			hasPassword: !!password,
+		});
+		set.status = 400;
+		return {
+			success: false,
+			message: "Username and password are required",
+		};
+	}
 
-    const database = dependencyContainer.resolve(DependencyToken.Database);
-    const usersCollection = database.getCollection('users');
+	const database = dependencyContainer.resolve(DependencyToken.Database);
+	const usersCollection = database.getCollection("users");
 
-    const user = (await usersCollection.findOne({ username })) as IUser | null;
+	const user = (await usersCollection.findOne({ username })) as
+		| IUser
+		| null;
 
-    if (!user) {
-        logger.warn('Login attempt with non-existent user', { username });
-        ctx.status = 401;
-        ctx.body = { success: false, message: 'Invalid username or password' };
-        return;
-    }
-    const isValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isValid) {
-        logger.warn('Login attempt with invalid password', { username });
-        ctx.status = 401;
-        ctx.body = { success: false, message: 'Invalid username or password' };
-        return;
-    }
+	if (!user) {
+		logger.warn("Login attempt with non-existent user", { username });
+		set.status = 401;
+		return { success: false, message: "Invalid username or password" };
+	}
 
-    const config = dependencyContainer.resolve(DependencyToken.Config);
-    const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
+	const isValid = await bcrypt.compare(password, user.passwordHash);
+	if (!isValid) {
+		logger.warn("Login attempt with invalid password", { username });
+		set.status = 401;
+		return { success: false, message: "Invalid username or password" };
+	}
 
-    const tokenPayload = { sub: username, username, id: user._id.toString(), aud: 'kivo' };
-    const accessToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: accessTokenExpiry } as jwt.SignOptions);
-    const refreshToken = jwt.sign(tokenPayload, jwtSecret, { expiresIn: refreshTokenExpiry } as jwt.SignOptions);
+	const config = dependencyContainer.resolve(DependencyToken.Config);
+	const jwtSecret = config.get("jwtSecret");
+	const accessTokenExpiry = config.get("accessTokenExpiry");
+	const refreshTokenExpiry = config.get("refreshTokenExpiry");
+	const secure = config.get("secure");
+	const sameSite = config.get("sameSite");
 
-    ctx.set('Cache-Control', 'no-store');
-    ctx.set('Pragma', 'no-cache');
+	const tokenPayload = {
+		sub: username,
+		username,
+		id: user._id.toString(),
+		aud: "kivo",
+	};
 
-    const sessionsCollection = database.getCollection('sessions');
-    const tokenHash = hashToken(refreshToken);
-    await sessionsCollection.insertOne({ _id: new ObjectId(), username, tokenHash, createdAt: new Date() });
+	// Sign tokens using jsonwebtoken library directly (as Elysia JWT plugin is for verification)
+	const { sign } = await import("jsonwebtoken");
+	const accessToken = sign(tokenPayload, jwtSecret, {
+		expiresIn: accessTokenExpiry,
+	});
+	const refreshToken = sign(tokenPayload, jwtSecret, {
+		expiresIn: refreshTokenExpiry,
+	});
 
-    logger.info('User login successful', { username, userId: user._id });
+	set.headers["Cache-Control"] = "no-store";
+	set.headers["Pragma"] = "no-cache";
 
-    ctx.cookies.set('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure,
-        sameSite,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+	const sessionsCollection = database.getCollection("sessions");
+	const tokenHash = hashToken(refreshToken);
+	await sessionsCollection.insertOne({
+		_id: new ObjectId(),
+		username,
+		tokenHash,
+		createdAt: new Date(),
+	});
 
-    ctx.body = {
-        accessToken,
-    };
+	logger.info("User login successful", { username, userId: user._id });
+
+	// Set cookie with Elysia's cookie API
+	cookie.refreshToken.set({
+		value: refreshToken,
+		httpOnly: true,
+		secure,
+		sameSite,
+		maxAge: 30 * 24 * 60 * 60, // seconds, not milliseconds like Koa
+	});
+
+	return {
+		accessToken,
+	};
 };

@@ -1,56 +1,65 @@
-import type { Context, Next } from 'koa';
+import { getClientIP } from "../../lib/utils/getClientIP.js";
 
 const searchRateLimit = new Map<string, { count: number; resetTime: number }>();
 
-export const searchRateLimitMiddleware = async (ctx: Context, next: Next) => {
-    // Get client IP from various sources (supports proxies, Cloudflare, etc)
-    const clientIP =
-        ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-        ctx.request.headers['cf-connecting-ip'] ||
-        ctx.ip ||
-        ctx.request.ip ||
-        'unknown';
+// Cleanup old entries every minute
+setInterval(() => {
+	const now = Date.now();
+	for (const [ip, data] of searchRateLimit.entries()) {
+		if (now > data.resetTime) {
+			searchRateLimit.delete(ip);
+		}
+	}
+}, 60000);
 
-    const now = Date.now();
-    const windowMs = 60 * 1000;
-    const maxRequests = 30;
+export function checkSearchRateLimit(request: Request): { allowed: boolean; retryAfter?: number } {
+	const clientIP = getClientIP(request);
+	const now = Date.now();
+	const windowMs = 60 * 1000;
+	const maxRequests = 30;
 
-    for (const [ip, data] of searchRateLimit.entries()) {
-        if (now > data.resetTime) {
-            searchRateLimit.delete(ip);
-        }
-    }
+	const clientData = searchRateLimit.get(clientIP);
 
-    const clientData = searchRateLimit.get(clientIP);
+	if (!clientData || now > clientData.resetTime) {
+		// New window
+		searchRateLimit.set(clientIP, {
+			count: 1,
+			resetTime: now + windowMs,
+		});
+		return { allowed: true };
+	}
 
-    if (!clientData || now > clientData.resetTime) {
-        searchRateLimit.set(clientIP, {
-            count: 1,
-            resetTime: now + windowMs,
-        });
-    } else if (clientData.count >= maxRequests) {
-        ctx.status = 429;
-        ctx.body = {
-            success: false,
-            message: 'Search rate limit exceeded. Please try again later.',
-            retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
-        };
-        return;
-    } else {
-        clientData.count++;
-    }
+	if (clientData.count >= maxRequests) {
+		// Rate limit exceeded
+		return {
+			allowed: false,
+			retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
+		};
+	}
 
-    await next();
-};
+	// Increment counter
+	clientData.count++;
+	return { allowed: true };
+}
 
-export const searchSecurityMiddleware = async (ctx: Context, next: Next) => {
-    ctx.set('X-Content-Type-Options', 'nosniff');
-    ctx.set('X-Frame-Options', 'DENY');
-    ctx.set('X-XSS-Protection', '1; mode=block');
+export const searchRateLimitMiddleware = async ({ request, set }: any) => {
+	const rateLimitResult = checkSearchRateLimit(request);
 
-    ctx.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    ctx.set('Pragma', 'no-cache');
-    ctx.set('Expires', '0');
+	// Apply security headers
+	set.headers["X-Content-Type-Options"] = "nosniff";
+	set.headers["X-Frame-Options"] = "DENY";
+	set.headers["X-XSS-Protection"] = "1; mode=block";
+	set.headers["Cache-Control"] =
+		"no-store, no-cache, must-revalidate, proxy-revalidate";
+	set.headers["Pragma"] = "no-cache";
+	set.headers["Expires"] = "0";
 
-    await next();
+	if (!rateLimitResult.allowed) {
+		set.status = 429;
+		return {
+			success: false,
+			message: "Search rate limit exceeded. Please try again later.",
+			retryAfter: rateLimitResult.retryAfter,
+		};
+	}
 };

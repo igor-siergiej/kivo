@@ -7,6 +7,7 @@
   "scripts": {
     "start": "bun --hot src/index.ts",
     "build": "bun build src/index.ts --outdir build --target=bun --external bcryptjs --external mongodb",
+    "test": "bun test",
     "lint": "biome check .",
     "lint:fix": "biome check --fix --unsafe .",
     "format": "biome format --write .",
@@ -14,16 +15,13 @@
     "release": "semantic-release"
   },
   "dependencies": {
+    "@elysiajs/cookie": "latest",
+    "@elysiajs/cors": "latest",
+    "@elysiajs/jwt": "latest",
     "@imapps/api-utils": "^0.3.0",
     "bcryptjs": "^3.0.2",
+    "elysia": "latest",
     "jsonwebtoken": "^9.0.2",
-    "koa": "^2.16.0",
-    "koa-body": "^6.0.1",
-    "koa-cors": "^0.0.16",
-    "koa-helmet": "^6.0.0",
-    "koa-logger": "^3.2.1",
-    "koa-ratelimit": "^5.0.1",
-    "koa-router": "^13.0.1",
     "mongodb": "^6.13.1"
   },
   "devDependencies": {
@@ -34,12 +32,6 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.2",
-    "@types/koa": "^2.15.0",
-    "@types/koa-cors": "^0.0.6",
-    "@types/koa-helmet": "^6.0.6",
-    "@types/koa-logger": "^3.1.5",
-    "@types/koa-ratelimit": "^5.0.5",
-    "@types/koa-router": "^7.4.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.0",
     "semantic-release": "^24.2.0"

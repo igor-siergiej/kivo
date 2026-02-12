@@ -1,167 +1,241 @@
-import Koa, { type Context, type Request } from 'koa';
-import { koaBody } from 'koa-body';
-import koaCors, { type Options } from 'koa-cors';
-import helmet from 'koa-helmet';
-import KoaLogger from 'koa-logger';
-import ratelimit from 'koa-ratelimit';
-
-import { dependencyContainer, registerDepdendencies } from './dependencies';
-import { initializeDatabase } from './lib/database/init';
-import { DependencyToken } from './lib/dependencyContainer/types';
-import routes from './routes';
-import { HttpErrorCode } from './types';
-
-const koaLogger = KoaLogger();
-
-const bodyOptions = {
-    formidable: {
-        keepExtensions: true,
-    },
-};
+import Elysia from "elysia";
+import { cookie } from "@elysiajs/cookie";
+import { cors } from "@elysiajs/cors";
+import { jwt } from "@elysiajs/jwt";
+import { dependencyContainer, registerDepdendencies } from "./dependencies.js";
+import { initializeDatabase } from "./lib/database/init.js";
+import { DependencyToken } from "./lib/dependencyContainer/types.js";
+import { checkGlobalRateLimit } from "./middleware/rateLimit.js";
+import { login } from "./routes/login/index.js";
+import { logout } from "./routes/logout/index.js";
+import { refresh } from "./routes/refresh/index.js";
+import { register } from "./routes/register/index.js";
+import { search } from "./routes/search/index.js";
+import { getUsersByUsernames } from "./routes/users/index.js";
+import { verify } from "./routes/verify/index.js";
 
 export const onStartup = async () => {
-    try {
-        registerDepdendencies();
+	try {
+		registerDepdendencies();
 
-        const app = new Koa();
-        app.proxy = true;
+		const database = dependencyContainer.resolve(DependencyToken.Database);
+		const config = dependencyContainer.resolve(DependencyToken.Config);
+		const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-        const database = dependencyContainer.resolve(DependencyToken.Database);
-        const config = dependencyContainer.resolve(DependencyToken.Config);
-        const logger = dependencyContainer.resolve(DependencyToken.Logger);
+		if (!database || !config) {
+			throw new Error("Could not resolve database or config dependencies");
+		}
 
-        if (!database || !config) {
-            throw new Error('Could not resolve database or config dependencies');
-        }
+		logger.info(
+			"Starting Kivo authentication service - connecting to database"
+		);
+		await database.connect({
+			connectionUri: config.get("connectionUri"),
+			databaseName: config.get("databaseName"),
+		});
+		logger.info("Connected to database");
 
-        // Setup CORS configuration from environment
-        const corsOriginsList = config
-            .get('corsAllowedOrigins')
-            .split(',')
-            .map((o) => o.trim());
-        const corsAllowNoOrigin = config.get('corsAllowNoOrigin');
-        const corsOptions: Options = {
-            origin: (request: Request) => {
-                const originHeader = request.headers.origin || '';
-                const isWhitelisted = corsOriginsList.includes(originHeader);
-                const hasNoOrigin = !originHeader;
+		await initializeDatabase();
 
-                // Allow whitelisted origins
-                if (isWhitelisted) {
-                    return originHeader;
-                }
+		logger.info("Creating database indexes");
+		const sessions = database.getCollection("sessions");
+		await sessions
+			.createIndex(
+				{ createdAt: 1 },
+				{ expireAfterSeconds: 60 * 60 * 24 * 30 }
+			)
+			.catch((error) => {
+				logger.error("Error creating session index", error);
+			});
+		logger.info("Database indexes created");
 
-                // Allow requests without origin header only if configured
-                if (hasNoOrigin && corsAllowNoOrigin) {
-                    return true;
-                }
+		// Setup CORS configuration from environment
+		const corsOriginsList = config
+			.get("corsAllowedOrigins")
+			.split(",")
+			.map((o: string) => o.trim());
+		const corsAllowNoOrigin = config.get("corsAllowNoOrigin");
 
-                return false;
-            },
-            methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-            credentials: true,
-            headers: ['Content-Type', 'Authorization', 'Origin'],
-        };
+		const jwtSecret = config.get("jwtSecret");
+		const secure = config.get("secure");
+		const sameSite = config.get("sameSite");
 
-        // Setup middleware
-        app.use(async (ctx, next) => {
-            const cfVisitor = ctx.headers['cf-visitor'];
-            if (cfVisitor) {
-                try {
-                    const parsed = JSON.parse(cfVisitor as string);
-                    if (parsed.scheme === 'https') {
-                        ctx.headers['x-forwarded-proto'] = 'https';
-                        ctx.headers['x-forwarded-scheme'] = 'https';
-                    }
-                } catch (error) {
-                    console.error('Error parsing cf-visitor header:', error);
-                }
-            }
-            await next();
-        });
+		const app = new Elysia()
+			// Register cookie plugin first (needed for refresh, login, logout)
+			.use(
+				cookie({
+					secure,
+					httpOnly: true,
+					sameSite,
+				})
+			)
+			// Register CORS plugin
+			.use(
+				cors({
+					origin: (request: Request) => {
+						const originHeader = request.headers.get("origin") || "";
+						const isWhitelisted = corsOriginsList.includes(
+							originHeader
+						);
+						const hasNoOrigin = !originHeader;
 
-        app.use(helmet());
-        app.use(
-            ratelimit({
-                driver: 'memory',
-                db: new Map(),
-                duration: 60 * 1000,
-                errorMessage: 'Too many requests, please slow down.',
-                id: (ctx: Context) => ctx.ip,
-                max: 55,
-            })
-        );
-        app.use(koaCors(corsOptions));
-        app.use(koaLogger);
-        app.use(koaBody(bodyOptions));
-        app.use(async (ctx, next) => {
-            try {
-                await next();
-            } catch (err) {
-                ctx.status = err.status || HttpErrorCode.InternalServerError;
-                ctx.body = {
-                    success: false,
-                    message: err.message || 'Internal Server Error',
-                };
-                ctx.app.emit('error', err, ctx);
-            }
-        });
+						// Allow whitelisted origins
+						if (isWhitelisted) {
+							return originHeader;
+						}
 
-        app.on('error', (err, ctx) => {
-            logger.error('Server Error', {
-                message: err.message,
-                stack: err.stack,
-                path: ctx.request.path,
-                method: ctx.request.method,
-            });
-        });
+						// Allow requests without origin header only if configured
+						if (hasNoOrigin && corsAllowNoOrigin) {
+							return true;
+						}
 
-        logger.info('Starting Kivo authentication service - connecting to database');
-        await database.connect({
-            connectionUri: config.get('connectionUri'),
-            databaseName: config.get('databaseName'),
-        });
-        logger.info('Connected to database');
+						return false;
+					},
+					methods: [
+						"GET",
+						"HEAD",
+						"PUT",
+						"POST",
+						"DELETE",
+						"PATCH",
+						"OPTIONS",
+					],
+					credentials: true,
+					headers: ["Content-Type", "Authorization", "Origin"],
+				})
+			)
+			// Register JWT plugin
+			.use(
+				jwt({
+					name: "jwt",
+					secret: jwtSecret,
+				})
+			);
 
-        await initializeDatabase();
+		// Global request hooks
+		app.onBeforeHandle(({ request, set }) => {
+			// Check rate limit
+			const rateLimitResult = checkGlobalRateLimit(request);
+			if (!rateLimitResult.allowed) {
+				set.status = 429;
+				return {
+					success: false,
+					message: "Too many requests, please slow down.",
+					retryAfter: rateLimitResult.retryAfter,
+				};
+			}
+		});
 
-        logger.info('Creating database indexes');
-        const sessions = database.getCollection('sessions');
-        await sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }).catch((error) => {
-            logger.error('Error creating session index', error);
-        });
-        logger.info('Database indexes created');
+		// Cloudflare header processing
+		app.onRequest(async ({ request }) => {
+			const cfVisitor = request.headers.get("cf-visitor");
+			if (cfVisitor) {
+				try {
+					const parsed = JSON.parse(cfVisitor);
+					if (parsed.scheme === "https") {
+						request.headers.set("x-forwarded-proto", "https");
+						request.headers.set("x-forwarded-scheme", "https");
+					}
+				} catch {
+					// Ignore parsing errors
+				}
+			}
+		});
 
-        // Register routes
-        app.use(routes.routes());
-        app.use(routes.allowedMethods());
-        logger.info('Routes registered successfully');
+		// Request logging hook
+		app.onRequest(async ({ request }) => {
+			const url = new URL(request.url);
+			logger.info(`${request.method} ${url.pathname}`, {
+				method: request.method,
+				path: url.pathname,
+			});
+		});
 
-        // Fallback 404 handler
-        app.use(async (ctx) => {
-            logger.warn('Route not found', { method: ctx.method, path: ctx.path });
-            ctx.status = 404;
-            ctx.body = { error: 'Not Found' };
-        });
+		// Response logging hook (onAfterResponse)
+		app.onAfterResponse(async ({ request, response, set }) => {
+			const url = new URL(request.url);
+			const status = set.status || 200;
+			logger.info(`${request.method} ${url.pathname}`, {
+				method: request.method,
+				path: url.pathname,
+				status: status,
+			});
+		});
 
-        app.listen(config.get('port'), () => {
-            logger.info(`Kivo authentication service running on port ${config.get('port')}`);
-        });
-    } catch (error: unknown) {
-        const logger = dependencyContainer.resolve(DependencyToken.Logger);
+		// Error handler
+		app.onError(({ error, request, set }) => {
+			const url = new URL(request.url);
+			let status = 500;
+			let message = "Internal Server Error";
 
-        if (error instanceof Error) {
-            if (logger) {
-                logger.error('Encountered an error on start up', { error: error.message });
-            }
-        } else {
-            if (logger) {
-                logger.error('Encountered unexpected error on start up', { error });
-            }
-        }
+			if (error instanceof Error) {
+				message = error.message;
+				logger.error("Unhandled error", {
+					error: error.message,
+					stack: error.stack,
+					path: url.pathname,
+					method: request.method,
+				});
+			}
 
-        process.exit(1);
-    }
+			set.status = status;
+			return {
+				success: false,
+				message,
+			};
+		});
+
+		// Health check endpoint
+		app.get("/health", () => ({
+			status: "healthy",
+			service: "kivo",
+			timestamp: new Date().toISOString(),
+		}));
+
+		// Auth routes
+		app.post("/login", login);
+		app.post("/register", register);
+		app.post("/refresh", refresh);
+		app.get("/verify", verify);
+		app.post("/logout", logout);
+
+		// Search endpoint (rate limiting handled inside handler)
+		app.get("/search", search);
+
+		// User management
+		app.post("/users", getUsersByUsernames);
+
+		// 404 handler
+		app.all("*", ({ set }) => {
+			set.status = 404;
+			return { error: "Not Found" };
+		});
+
+		const port = config.get("port");
+		app.listen(port, () => {
+			logger.info(
+				`Kivo authentication service running on port ${port}`
+			);
+		});
+	} catch (error: unknown) {
+		const logger = dependencyContainer.resolve(DependencyToken.Logger);
+
+		if (error instanceof Error) {
+			if (logger) {
+				logger.error("Encountered an error on start up", {
+					error: error.message,
+				});
+			}
+		} else {
+			if (logger) {
+				logger.error("Encountered unexpected error on start up", {
+					error,
+				});
+			}
+		}
+
+		process.exit(1);
+	}
 };
 
 onStartup();

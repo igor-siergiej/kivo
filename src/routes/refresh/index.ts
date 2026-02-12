@@ -1,131 +1,142 @@
-import crypto from 'node:crypto';
-import jwt, { type SignOptions } from 'jsonwebtoken';
-import type { Context } from 'koa';
-import { ObjectId } from 'mongodb';
+import crypto from "node:crypto";
+import { ObjectId } from "mongodb";
+import { dependencyContainer } from "../../dependencies.js";
+import { DependencyToken } from "../../lib/dependencyContainer/types.js";
 
-import { dependencyContainer } from '../../dependencies';
-import { DependencyToken } from '../../lib/dependencyContainer/types';
+const hashToken = (token: string) =>
+	crypto.createHash("sha256").update(token).digest("hex");
 
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+export const refresh = async ({ cookie, set, request }: any) => {
+	const config = dependencyContainer.resolve(DependencyToken.Config);
+	const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-export const refresh = async (ctx: Context) => {
-    const config = dependencyContainer.resolve(DependencyToken.Config);
-    const logger = dependencyContainer.resolve(DependencyToken.Logger);
-    console.log('refreshing token');
-    const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
+	const jwtSecret = config.get("jwtSecret");
+	const accessTokenExpiry = config.get("accessTokenExpiry");
+	const refreshTokenExpiry = config.get("refreshTokenExpiry");
+	const secure = config.get("secure");
+	const sameSite = config.get("sameSite");
 
-    const refreshToken = ctx.cookies.get('refreshToken');
+	// In Elysia, cookies need to be read from headers
+	const cookieHeader = request.headers.get("cookie") || "";
+	const refreshTokenMatch = cookieHeader.match(/refreshToken=([^;]*)/);
+	const refreshToken = refreshTokenMatch ? refreshTokenMatch[1] : null;
 
-    if (!refreshToken) {
-        logger.warn('Token refresh attempt with missing refresh token');
-        ctx.status = 400;
-        ctx.body = { success: false, message: 'refreshToken cookie missing' };
-        return;
-    }
+	if (!refreshToken) {
+		logger.warn("Token refresh attempt with missing refresh token");
+		set.status = 400;
+		return { success: false, message: "refreshToken cookie missing" };
+	}
 
-    try {
-        const payload = jwt.verify(refreshToken, jwtSecret) as { sub: string; aud?: string };
-        if (payload.aud !== 'kivo') {
-            logger.warn('Token refresh failed: invalid audience', { audience: payload.aud });
-            ctx.status = 401;
-            ctx.body = { success: false, message: 'Invalid session' };
-            return;
-        }
-        const username = payload.sub;
+	try {
+		const { verify } = await import("jsonwebtoken");
+		const payload = verify(refreshToken, jwtSecret) as {
+			sub: string;
+			aud?: string;
+		};
 
-        const database = dependencyContainer.resolve(DependencyToken.Database);
-        const sessionsCollection = database.getCollection('sessions');
+		if (payload.aud !== "kivo") {
+			logger.warn("Token refresh failed: invalid audience", {
+				audience: payload.aud,
+			});
+			set.status = 401;
+			return { success: false, message: "Invalid session" };
+		}
 
-        const tokenHash = hashToken(refreshToken);
+		const username = payload.sub;
 
-        const session = await sessionsCollection.findOne({ tokenHash, username });
+		const database = dependencyContainer.resolve(DependencyToken.Database);
+		const sessionsCollection = database.getCollection("sessions");
 
-        if (!session) {
-            logger.warn('Token refresh failed: session not found', { username });
-            ctx.status = 401;
-            ctx.body = { success: false, message: 'Invalid session' };
-            return;
-        }
+		const tokenHash = hashToken(refreshToken);
 
-        // Get user to include ID in tokens
-        const usersCollection = database.getCollection('users');
-        const user = await usersCollection.findOne({ username });
+		const session = await sessionsCollection.findOne({
+			tokenHash,
+			username,
+		});
 
-        if (!user) {
-            logger.warn('Token refresh failed: user not found', { username });
-            ctx.status = 401;
-            ctx.body = { success: false, message: 'Authentication failed' };
-            return;
-        }
+		if (!session) {
+			logger.warn("Token refresh failed: session not found", {
+				username,
+			});
+			set.status = 401;
+			return { success: false, message: "Invalid session" };
+		}
 
-        // Session valid – issue new tokens
-        const signOptsAccess = { expiresIn: accessTokenExpiry } as SignOptions;
-        const signOptsRefresh = { expiresIn: refreshTokenExpiry } as SignOptions;
+		// Get user to include ID in tokens
+		const usersCollection = database.getCollection("users");
+		const user = await usersCollection.findOne({ username });
 
-        const newAccessToken = jwt.sign(
-            { sub: username, username, id: user._id, aud: 'kivo' },
-            jwtSecret,
-            signOptsAccess
-        );
-        const newRefreshToken = jwt.sign(
-            { sub: username, username, id: user._id, aud: 'kivo' },
-            jwtSecret,
-            signOptsRefresh
-        );
+		if (!user) {
+			logger.warn("Token refresh failed: user not found", { username });
+			set.status = 401;
+			return { success: false, message: "Authentication failed" };
+		}
 
-        const newTokenHash = hashToken(newRefreshToken);
+		// Session valid – issue new tokens
+		const { sign } = await import("jsonwebtoken");
+		const newAccessToken = sign(
+			{ sub: username, username, id: user._id, aud: "kivo" },
+			jwtSecret,
+			{ expiresIn: accessTokenExpiry }
+		);
+		const newRefreshToken = sign(
+			{ sub: username, username, id: user._id, aud: "kivo" },
+			jwtSecret,
+			{ expiresIn: refreshTokenExpiry }
+		);
 
-        // Store new session and delete old one atomically
-        await sessionsCollection.insertOne({
-            _id: new ObjectId(),
-            username,
-            tokenHash: newTokenHash,
-            createdAt: new Date(),
-        });
-        await sessionsCollection.deleteOne({ _id: session._id });
+		const newTokenHash = hashToken(newRefreshToken);
 
-        logger.info('Token refreshed successfully', { username });
+		// Store new session and delete old one atomically
+		await sessionsCollection.insertOne({
+			_id: new ObjectId(),
+			username,
+			tokenHash: newTokenHash,
+			createdAt: new Date(),
+		});
+		await sessionsCollection.deleteOne({ _id: session._id });
 
-        // Prevent caching of sensitive token response
-        ctx.set('Cache-Control', 'no-store');
-        ctx.set('Pragma', 'no-cache');
+		logger.info("Token refreshed successfully", { username });
 
-        // Set new refresh token cookie
-        ctx.cookies.set('refreshToken', newRefreshToken, {
-            httpOnly: true,
-            secure,
-            sameSite,
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-        });
+		// Prevent caching of sensitive token response
+		set.headers["Cache-Control"] = "no-store";
+		set.headers["Pragma"] = "no-cache";
 
-        ctx.body = {
-            accessToken: newAccessToken,
-        };
-    } catch (error) {
-        // Handle expected token expiration separately from unexpected errors
-        if (error instanceof jwt.TokenExpiredError) {
-            logger.warn('Token refresh failed: refresh token expired');
-            ctx.status = 403;
-            ctx.body = { success: false, message: 'Refresh token expired' };
-            return;
-        }
+		// Set new refresh token cookie
+		cookie.refreshToken.set({
+			value: newRefreshToken,
+			httpOnly: true,
+			secure,
+			sameSite,
+			maxAge: 30 * 24 * 60 * 60, // seconds
+		});
 
-        if (error instanceof jwt.JsonWebTokenError) {
-            logger.warn('Token refresh failed: invalid refresh token', {
-                error: error.message,
-            });
-            ctx.status = 401;
-            ctx.body = { success: false, message: 'Invalid refresh token' };
-            return;
-        }
+		return {
+			accessToken: newAccessToken,
+		};
+	} catch (error) {
+		// Handle expected token expiration separately from unexpected errors
+		const { TokenExpiredError, JsonWebTokenError } = await import(
+			"jsonwebtoken"
+		);
 
-        // Log unexpected errors
-        logger.error('Error refreshing token', error);
-        ctx.status = 500;
-        ctx.body = { success: false, message: 'Internal server error' };
-    }
+		if (error instanceof TokenExpiredError) {
+			logger.warn("Token refresh failed: refresh token expired");
+			set.status = 403;
+			return { success: false, message: "Refresh token expired" };
+		}
+
+		if (error instanceof JsonWebTokenError) {
+			logger.warn("Token refresh failed: invalid refresh token", {
+				error: (error as Error).message,
+			});
+			set.status = 401;
+			return { success: false, message: "Invalid refresh token" };
+		}
+
+		// Log unexpected errors
+		logger.error("Error refreshing token", error);
+		set.status = 500;
+		return { success: false, message: "Internal server error" };
+	}
 };
