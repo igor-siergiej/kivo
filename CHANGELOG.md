@@ -1,3 +1,10 @@
+## [1.7.1](https://gitlab.com/imapps/kivo/compare/v1.7.0...v1.7.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* CORS configuration for production and staging environments ([6875d9b](https://gitlab.com/imapps/kivo/commit/6875d9bf15827cff600c475133d4084ff8b9362d))
+
 # [1.7.0](https://gitlab.com/imapps/kivo/compare/v1.6.4...v1.7.0) (2026-02-12)
 
 
