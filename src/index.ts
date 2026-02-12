@@ -65,26 +65,10 @@ export const onStartup = async () => {
             // Register CORS plugin
             .use(
                 cors({
-                    origin: (request: Request) => {
-                        const originHeader = request.headers.get('origin') || '';
-                        const isWhitelisted = corsOriginsList.includes(originHeader);
-                        const hasNoOrigin = !originHeader;
-
-                        // Allow whitelisted origins
-                        if (isWhitelisted) {
-                            return originHeader;
-                        }
-
-                        // Allow requests without origin header only if configured
-                        if (hasNoOrigin && corsAllowNoOrigin) {
-                            return true;
-                        }
-
-                        return false;
-                    },
-                    methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+                    allowedHeaders: ['Content-Type', 'Authorization', 'Origin'],
                     credentials: true,
-                    headers: ['Content-Type', 'Authorization', 'Origin'],
+                    methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+                    origin: corsOriginsList,
                 })
             )
             // Register JWT plugin
