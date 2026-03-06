@@ -13,3 +13,4 @@ bun run src/index.ts
 ```
 
 [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+# Trigger CI pipeline
