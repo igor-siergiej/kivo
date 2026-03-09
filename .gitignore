@@ -12,3 +12,6 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 .env.*.local
+
+# Git worktrees
+.worktrees
