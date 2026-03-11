@@ -5,9 +5,13 @@ WORKDIR /app
 # Install build dependencies for bcrypt native compilation
 RUN apk add --no-cache python3 make g++
 
+ARG NODE_AUTH_TOKEN
+
 COPY package.json bun.lock bunfig.toml ./
 
+ENV BUN_AUTH_TOKEN=${NODE_AUTH_TOKEN}
 RUN bun install --frozen-lockfile
+ENV BUN_AUTH_TOKEN=
 
 COPY . .
 
@@ -23,10 +27,14 @@ RUN apk add --no-cache --virtual .build-deps \
     make \
     g++
 
+ARG NODE_AUTH_TOKEN
+
 COPY package.json bun.lock bunfig.toml ./
 
+ENV BUN_AUTH_TOKEN=${NODE_AUTH_TOKEN}
 RUN bun install --frozen-lockfile --production && \
     rm -rf /root/.bun/install/cache
+ENV BUN_AUTH_TOKEN=
 
 # Remove build dependencies to keep image small
 RUN apk del .build-deps
