@@ -1,11 +1,11 @@
-name: Release
+name: CI/CD
 
 on:
   push:
     branches: [main]
 
 jobs:
-  release:
+  ci-cd:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,8 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: corepack enable
+      - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
+        env:
+          BUN_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - run: bun run lint
+      - run: bun run tsc --noEmit
+      - run: bun test
       - run: bunx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
