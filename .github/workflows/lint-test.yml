@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-test:
-    uses: imapps/utils/.github/workflows/lint-test.yml@main
+    uses: igor-siergiej/utils/.github/workflows/lint-test.yml@main
     with:
       package-manager: bun
     secrets:
