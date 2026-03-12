@@ -1,3 +1,27 @@
+# [1.7.0](https://github.com/igor-siergiej/kivo/compare/v1.6.3...v1.7.0) (2026-03-12)
+
+
+### Bug Fixes
+
+* **ci-cd:** correct version extraction for GitHub Actions ([641abcc](https://github.com/igor-siergiej/kivo/commit/641abccbca7e4477078ad8b3d78d5b0e93778fe1))
+* **ci-cd:** use correct bun setup action (oven-sh/setup-bun@v2) ([c932bc2](https://github.com/igor-siergiej/kivo/commit/c932bc2d539c525b1cc89ee0a834c93af985b002))
+* **ci-cd:** use GITHUB_TOKEN instead of GH_TOKEN ([81e7ecb](https://github.com/igor-siergiej/kivo/commit/81e7ecba7452d79046c9dc8b32542d85b722cf14))
+* correct repository URL to igor-siergiej org ([001daac](https://github.com/igor-siergiej/kivo/commit/001daac624b34e5634bb6eac2bb504940beed88a))
+* correct reusable workflow org reference ([7343c0e](https://github.com/igor-siergiej/kivo/commit/7343c0ea8d733adef28dc1562e4916f0c2e12f6c))
+* CORS configuration for production and staging environments ([6875d9b](https://github.com/igor-siergiej/kivo/commit/6875d9bf15827cff600c475133d4084ff8b9362d))
+* Override PRIVATE_REGISTRY to use external IP for CI runner ([7a69ed6](https://github.com/igor-siergiej/kivo/commit/7a69ed6ed024e59eed6b0227b3716389462d7a6d))
+* remove hardcoded token reference from bunfig ([71fdcda](https://github.com/igor-siergiej/kivo/commit/71fdcda3cfece295bf90b2708e1640e0a0ed513e))
+* Update Docker registry IP from 192.168.68.59 to 192.168.68.54 ([d78a6b0](https://github.com/igor-siergiej/kivo/commit/d78a6b0c4a2554714580f757281c8e2f15dd8e31))
+* use bun for release job (not npm) ([3a3f920](https://github.com/igor-siergiej/kivo/commit/3a3f920c6627b6f16aa040540337af2a9fe7e377))
+* use GitHub Container Registry (ghcr.io) instead of Docker Hub ([83fc937](https://github.com/igor-siergiej/kivo/commit/83fc937a7ca8ce282a26406c03ddca3eb8fa8fd0))
+
+
+### Features
+
+* add utils submodule for shared CI/CD pipelines ([6e355b9](https://github.com/igor-siergiej/kivo/commit/6e355b9b6ca05e688cffe5e5c76da382ce025bfa))
+* **ci-cd:** add GitHub Actions workflow with shared pipelines ([c400182](https://github.com/igor-siergiej/kivo/commit/c40018281ef05e3fa79e2999af3cdcf4df8ec9df))
+* Migrate from Koa to Elysia framework ([77cf469](https://github.com/igor-siergiej/kivo/commit/77cf46967b11f8fbf39cde547ce64a199c47b950))
+
 ## [1.7.1](https://gitlab.com/imapps/kivo/compare/v1.7.0...v1.7.1) (2026-02-12)
 
 
