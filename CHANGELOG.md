@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/igor-siergiej/kivo/compare/v1.7.2...v1.7.3) (2026-03-12)
+
+
+### Bug Fixes
+
+* remove koa-based code incompatible with Elysia framework ([7c9bc63](https://github.com/igor-siergiej/kivo/commit/7c9bc63db824d7a0767a8d36b275dc108d631f69))
+
 ## [1.7.2](https://github.com/igor-siergiej/kivo/compare/v1.7.1...v1.7.2) (2026-03-12)
 
 
