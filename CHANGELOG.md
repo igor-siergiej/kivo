@@ -1,3 +1,22 @@
+## [1.7.8](https://github.com/igor-siergiej/kivo/compare/v1.7.7...v1.7.8) (2026-03-12)
+
+
+### Bug Fixes
+
+* add .yarnrc.yml with proper npm registry auth configuration ([1613df3](https://github.com/igor-siergiej/kivo/commit/1613df3deef5e58978a76031f49383c81397f61b))
+* add GH_TOKEN to bun install steps for private package authentication ([a8aa1d0](https://github.com/igor-siergiej/kivo/commit/a8aa1d02373eb71aabb93df675c13a2c248e3d53))
+* remove bunfig.toml scoped registry configuration for GitHub Packages ([33fad8a](https://github.com/igor-siergiej/kivo/commit/33fad8a6436052ecb0d192e41433a0239e52846b))
+* restore GitHub Packages configuration with GH_TOKEN authentication ([59e374f](https://github.com/igor-siergiej/kivo/commit/59e374f9c4156e82466a82c44c1f35ad5a5eba32))
+* update package names from [@imapps](https://github.com/imapps) to [@igor-siergiej](https://github.com/igor-siergiej) ([9fce37f](https://github.com/igor-siergiej/kivo/commit/9fce37f62e32cb03434e2cff6e6d7c702267c965))
+* use .npmrc for GitHub Packages authentication instead of bunfig.toml ([a1777d8](https://github.com/igor-siergiej/kivo/commit/a1777d8c2bd9cd040706e03fc426826e6c51719d))
+* use correct [@igor-siergiej](https://github.com/igor-siergiej) scope with proper npm registry configuration ([7f77c21](https://github.com/igor-siergiej/kivo/commit/7f77c21804b5f302a84b7ca188b348b4df5dd0fb))
+* use correct package versions (0.4.8) and NODE_AUTH_TOKEN for npm ([7d5f539](https://github.com/igor-siergiej/kivo/commit/7d5f539eb4b62ba47129ef767c245790c8bcc0b3))
+* use GH_TOKEN for npm package authentication in all jobs ([f933b20](https://github.com/igor-siergiej/kivo/commit/f933b20d5d244fa81705a84e169025c93652a27b))
+* use GITHUB_TOKEN and add package read permissions to workflow jobs ([56b406c](https://github.com/igor-siergiej/kivo/commit/56b406cf71e2a634772ba12db0668d68cc84de4b))
+* use GITHUB_TOKEN instead of GH_TOKEN for package authentication ([4caafcb](https://github.com/igor-siergiej/kivo/commit/4caafcb45b6f6f99b417afacf9761e84908f649d))
+* use GITHUB_TOKEN instead of GH_TOKEN for package authentication ([0f3b3ac](https://github.com/igor-siergiej/kivo/commit/0f3b3ac93ecbe473391007ce03a4da4c4c29567a))
+* use public npm registry for packages and remove GITHUB_TOKEN from package installs ([1fc90cc](https://github.com/igor-siergiej/kivo/commit/1fc90cc76c6da8f76c1f27a8e73b296e0032ca02))
+
 ## [1.7.7](https://github.com/igor-siergiej/kivo/compare/v1.7.6...v1.7.7) (2026-03-12)
 
 
