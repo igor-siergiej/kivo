@@ -1,3 +1,11 @@
+## [1.7.9](https://github.com/igor-siergiej/kivo/compare/v1.7.8...v1.7.9) (2026-03-12)
+
+
+### Bug Fixes
+
+* substitute NODE_AUTH_TOKEN in .npmrc at build time using sed ([6193a06](https://github.com/igor-siergiej/kivo/commit/6193a06b9e477ecf9dc6b5c479818a4cc18b4a1f))
+* update Dockerfile to use .npmrc for authentication and remove non-existent lock file copy ([c53374c](https://github.com/igor-siergiej/kivo/commit/c53374cd63b83c6c84fe9f4421c348a97882e778))
+
 ## [1.7.8](https://github.com/igor-siergiej/kivo/compare/v1.7.7...v1.7.8) (2026-03-12)
 
 
