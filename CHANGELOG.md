@@ -1,3 +1,10 @@
+## [1.7.6](https://github.com/igor-siergiej/kivo/compare/v1.7.5...v1.7.6) (2026-03-12)
+
+
+### Bug Fixes
+
+* use GITHUB_TOKEN instead of GH_TOKEN for Docker build npm authentication ([1f091b5](https://github.com/igor-siergiej/kivo/commit/1f091b578a597fe7ec4f7fbbcb2198a4f06a90b2))
+
 ## [1.7.5](https://github.com/igor-siergiej/kivo/compare/v1.7.4...v1.7.5) (2026-03-12)
 
 
