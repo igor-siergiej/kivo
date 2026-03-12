@@ -1,3 +1,10 @@
+## [1.7.11](https://github.com/igor-siergiej/kivo/compare/v1.7.10...v1.7.11) (2026-03-12)
+
+
+### Bug Fixes
+
+* use Docker Hub credentials for image push ([982d166](https://github.com/igor-siergiej/kivo/commit/982d1667ecafa89a8fde5b35e8a6ab40e3065d7e))
+
 ## [1.7.10](https://github.com/igor-siergiej/kivo/compare/v1.7.9...v1.7.10) (2026-03-12)
 
 
