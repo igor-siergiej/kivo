@@ -7,4 +7,6 @@ export interface IConfig {
     refreshTokenExpiry: string;
     secure: boolean;
     sameSite: 'strict' | 'lax' | 'none';
+    corsAllowedOrigins: string;
+    corsAllowNoOrigin: boolean;
 }
