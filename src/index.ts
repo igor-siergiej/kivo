@@ -47,7 +47,6 @@ export const onStartup = async () => {
             .get('corsAllowedOrigins')
             .split(',')
             .map((o: string) => o.trim());
-        const _corsAllowNoOrigin = config.get('corsAllowNoOrigin');
 
         const jwtSecret = config.get('jwtSecret');
         const secure = config.get('secure');
@@ -119,7 +118,7 @@ export const onStartup = async () => {
         });
 
         // Response logging hook (onAfterResponse)
-        app.onAfterResponse(async ({ request, response, set }) => {
+        app.onAfterResponse(async ({ request, set }) => {
             const url = new URL(request.url);
             const status = set.status || 200;
             logger.info(`${request.method} ${url.pathname}`, {

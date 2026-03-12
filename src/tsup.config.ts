@@ -1,3 +1,4 @@
+// @ts-ignore - tsup types not available in strict mode
 import { defineConfig } from 'tsup';
 
 export default defineConfig({

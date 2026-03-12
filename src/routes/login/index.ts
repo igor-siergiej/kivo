@@ -59,7 +59,7 @@ export const login = async ({ body, cookie, set }: any) => {
     const tokenPayload = {
         sub: username,
         username,
-        id: user._id.toString(),
+        id: user._id?.toString() || username,
         aud: 'kivo',
     };
 

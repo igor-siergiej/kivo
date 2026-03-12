@@ -1,5 +1,4 @@
-import type { Logger, MongoDbConnection } from '@imapps/api-utils';
-import { ConfigService } from '@imapps/api-utils';
+import type { Logger, MongoDbConnection, ConfigService } from '@imapps/api-utils';
 import type { Session, User } from '../database/types';
 
 // Collection type mapping for MongoDB
@@ -17,5 +16,5 @@ export enum DependencyToken {
 export type Dependencies = {
     [DependencyToken.Database]: MongoDbConnection<Collections>;
     [DependencyToken.Logger]: Logger;
-    [DependencyToken.Config]: ConfigService;
+    [DependencyToken.Config]: ConfigService<any>;
 };

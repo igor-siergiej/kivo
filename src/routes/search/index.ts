@@ -76,7 +76,7 @@ export const search = async ({ query, request, set }: any) => {
         }
 
         const usersCollection = database.getCollection('users');
-        let results = [];
+        let results: Array<{ username: string; score?: number }> = [];
 
         try {
             // Try text search first
