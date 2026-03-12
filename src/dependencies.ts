@@ -10,8 +10,10 @@ export const registerDepdendencies = () => {
     // Register the config instance directly rather than the class
     dependencyContainer.registerSingleton(
         DependencyToken.Config,
+        // biome-ignore lint/suspicious/noExplicitAny: Config instance wrapper requires any type
         class {
             constructor() {
+                // biome-ignore lint/suspicious/noExplicitAny: Config instance requires any type
                 return config as any;
             }
         } as any

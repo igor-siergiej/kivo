@@ -42,6 +42,7 @@ export function checkSearchRateLimit(request: Request): { allowed: boolean; retr
     return { allowed: true };
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
 export const searchSecurityMiddleware = async ({ set }: any) => {
     // Apply security headers
     set.headers['X-Content-Type-Options'] = 'nosniff';
@@ -52,6 +53,7 @@ export const searchSecurityMiddleware = async ({ set }: any) => {
     set.headers.Expires = '0';
 };
 
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
 export const searchRateLimitMiddleware = async ({ request, set }: any) => {
     const rateLimitResult = checkSearchRateLimit(request);
 

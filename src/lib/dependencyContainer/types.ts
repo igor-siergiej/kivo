@@ -16,5 +16,6 @@ export enum DependencyToken {
 export type Dependencies = {
     [DependencyToken.Database]: MongoDbConnection<Collections>;
     [DependencyToken.Logger]: Logger;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService requires generic type parameter for schema
     [DependencyToken.Config]: ConfigService<any>;
 };

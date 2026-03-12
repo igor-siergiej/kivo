@@ -46,9 +46,7 @@ export const onStartup = async () => {
 
         // Setup CORS configuration from environment
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const corsOriginsList = (config.get('corsAllowedOrigins') as any)
-            .split(',')
-            .map((o: string) => o.trim());
+        const corsOriginsList = (config.get('corsAllowedOrigins') as any).split(',').map((o: string) => o.trim());
 
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
         const jwtSecret = config.get('jwtSecret') as any;
