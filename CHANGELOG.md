@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/igor-siergiej/kivo/compare/v1.7.4...v1.7.5) (2026-03-12)
+
+
+### Bug Fixes
+
+* add biome-ignore comments and cast ConfigService.get() to suppress type warnings ([c371839](https://github.com/igor-siergiej/kivo/commit/c371839dc605cadf922055618633341c466e945c))
+
 ## [1.7.4](https://github.com/igor-siergiej/kivo/compare/v1.7.3...v1.7.4) (2026-03-12)
 
 
