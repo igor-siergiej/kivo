@@ -9,8 +9,8 @@ ARG NODE_AUTH_TOKEN
 
 COPY package.json .npmrc ./
 
-ENV NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN}
-RUN bun install
+RUN sed -i "s/\${NODE_AUTH_TOKEN}/${NODE_AUTH_TOKEN}/g" .npmrc && \
+    bun install
 
 COPY . .
 
@@ -30,8 +30,8 @@ ARG NODE_AUTH_TOKEN
 
 COPY package.json .npmrc ./
 
-ENV NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN}
-RUN bun install --production && \
+RUN sed -i "s/\${NODE_AUTH_TOKEN}/${NODE_AUTH_TOKEN}/g" .npmrc && \
+    bun install --production && \
     rm -rf /root/.bun/install/cache
 
 # Remove build dependencies to keep image small
