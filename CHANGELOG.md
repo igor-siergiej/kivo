@@ -1,3 +1,11 @@
+## [1.7.7](https://github.com/igor-siergiej/kivo/compare/v1.7.6...v1.7.7) (2026-03-12)
+
+
+### Bug Fixes
+
+* add biome-ignore comments to suppress expected any types and fix formatting ([f56a571](https://github.com/igor-siergiej/kivo/commit/f56a571fa36a9749666855feb25f2bc2bffcb397))
+* add type casts for config.get() calls in src/index.ts ([71bc075](https://github.com/igor-siergiej/kivo/commit/71bc075d55dc2a081fbaaac80f6046c03aef0c06))
+
 ## [1.7.6](https://github.com/igor-siergiej/kivo/compare/v1.7.5...v1.7.6) (2026-03-12)
 
 
