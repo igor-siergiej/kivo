@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/igor-siergiej/kivo/compare/v1.7.1...v1.7.2) (2026-03-12)
+
+
+### Bug Fixes
+
+* use bash explicitly to run pipeline script ([0514970](https://github.com/igor-siergiej/kivo/commit/0514970f90ce348ca76b338d6cb04518bc8c73eb))
+
 ## [1.7.1](https://github.com/igor-siergiej/kivo/compare/v1.7.0...v1.7.1) (2026-03-12)
 
 
