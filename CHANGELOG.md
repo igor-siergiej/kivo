@@ -1,3 +1,10 @@
+## [1.7.10](https://github.com/igor-siergiej/kivo/compare/v1.7.9...v1.7.10) (2026-03-12)
+
+
+### Bug Fixes
+
+* set build-publish job permissions to packages: write for Docker push ([4d5cdf7](https://github.com/igor-siergiej/kivo/commit/4d5cdf73a28a56cd3f409185565eb2664c3004b7))
+
 ## [1.7.9](https://github.com/igor-siergiej/kivo/compare/v1.7.8...v1.7.9) (2026-03-12)
 
 
