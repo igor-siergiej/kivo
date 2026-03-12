@@ -1,7 +1,12 @@
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-export const getUsersByUsernames = async ({ body, set }: any) => {
+interface GetUsersRequest {
+    body?: { usernames?: Array<string> };
+    set: any;
+}
+
+export const getUsersByUsernames = async ({ body, set }: GetUsersRequest) => {
     const { usernames } = body as { usernames?: Array<string> };
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 

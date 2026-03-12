@@ -1,7 +1,12 @@
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-export const verify = async ({ headers, set }: any) => {
+interface VerifyRequest {
+    headers: any;
+    set: any;
+}
+
+export const verify = async ({ headers, set }: VerifyRequest) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
     const authHeader = headers.authorization;

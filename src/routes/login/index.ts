@@ -12,7 +12,13 @@ interface IUser {
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-export const login = async ({ body, cookie, set }: any) => {
+interface LoginRequest {
+    body?: { username?: string; password?: string };
+    cookie: any;
+    set: any;
+}
+
+export const login = async ({ body, cookie, set }: LoginRequest) => {
     const { username, password } = body as {
         username?: string;
         password?: string;

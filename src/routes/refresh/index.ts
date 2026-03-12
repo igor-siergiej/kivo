@@ -5,7 +5,13 @@ import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-export const refresh = async ({ cookie, set, request }: any) => {
+interface RefreshRequest {
+    cookie: any;
+    set: any;
+    request: any;
+}
+
+export const refresh = async ({ cookie, set, request }: RefreshRequest) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 

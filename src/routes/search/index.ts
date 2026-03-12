@@ -2,7 +2,13 @@ import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { checkSearchRateLimit } from './middleware.js';
 
-export const search = async ({ query, request, set }: any) => {
+interface SearchRequest {
+    query?: Record<string, string | string[]>;
+    request: any;
+    set: any;
+}
+
+export const search = async ({ query, request, set }: SearchRequest) => {
     // Check search rate limit
     const rateLimitResult = checkSearchRateLimit(request);
 

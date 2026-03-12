@@ -4,7 +4,13 @@ import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-export const logout = async ({ cookie, set, request }: any) => {
+interface LogoutRequest {
+    cookie: any;
+    set: any;
+    request: any;
+}
+
+export const logout = async ({ cookie, set, request }: LogoutRequest) => {
     // In Elysia, cookies need to be read from headers
     const cookieHeader = request.headers.get('cookie') || '';
     const refreshTokenMatch = cookieHeader.match(/refreshToken=([^;]*)/);
