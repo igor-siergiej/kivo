@@ -1,3 +1,11 @@
+## [1.7.4](https://github.com/igor-siergiej/kivo/compare/v1.7.3...v1.7.4) (2026-03-12)
+
+
+### Bug Fixes
+
+* resolve linting errors - add proper types and fix imports ([d5fd823](https://github.com/igor-siergiej/kivo/commit/d5fd82348e89daa52120b89efcda8c38f737749f))
+* resolve remaining TypeScript compilation errors ([892c5fa](https://github.com/igor-siergiej/kivo/commit/892c5fa9e733bfa8b37d25deab8c53fe6c704a79))
+
 ## [1.7.3](https://github.com/igor-siergiej/kivo/compare/v1.7.2...v1.7.3) (2026-03-12)
 
 
