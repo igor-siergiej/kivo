@@ -42,9 +42,7 @@ export function checkSearchRateLimit(request: Request): { allowed: boolean; retr
     return { allowed: true };
 }
 
-export const searchRateLimitMiddleware = async ({ request, set }: any) => {
-    const rateLimitResult = checkSearchRateLimit(request);
-
+export const searchSecurityMiddleware = async ({ set }: any) => {
     // Apply security headers
     set.headers['X-Content-Type-Options'] = 'nosniff';
     set.headers['X-Frame-Options'] = 'DENY';
@@ -52,6 +50,10 @@ export const searchRateLimitMiddleware = async ({ request, set }: any) => {
     set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate';
     set.headers.Pragma = 'no-cache';
     set.headers.Expires = '0';
+};
+
+export const searchRateLimitMiddleware = async ({ request, set }: any) => {
+    const rateLimitResult = checkSearchRateLimit(request);
 
     if (!rateLimitResult.allowed) {
         set.status = 429;
