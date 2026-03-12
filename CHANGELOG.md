@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/igor-siergiej/kivo/compare/v1.7.0...v1.7.1) (2026-03-12)
+
+
+### Bug Fixes
+
+* correct config service typing and add missing CORS properties ([1025d24](https://github.com/igor-siergiej/kivo/commit/1025d24c0173fc05ce44582086ebd12194fb7f2a))
+
 # [1.7.0](https://github.com/igor-siergiej/kivo/compare/v1.6.3...v1.7.0) (2026-03-12)
 
 
