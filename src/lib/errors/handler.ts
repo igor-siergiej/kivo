@@ -1,4 +1,4 @@
-import type { Logger } from '@imapps/api-utils';
+import type { Logger } from '@igor-siergiej/api-utils';
 import type { Handler } from 'elysia';
 import { APIError } from '../../types/index.js';
 

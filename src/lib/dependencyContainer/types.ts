@@ -1,4 +1,4 @@
-import type { ConfigService, Logger, MongoDbConnection } from '@imapps/api-utils';
+import type { ConfigService, Logger, MongoDbConnection } from '@igor-siergiej/api-utils';
 import type { Session, User } from '../database/types';
 
 // Collection type mapping for MongoDB
