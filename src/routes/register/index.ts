@@ -6,6 +6,7 @@ import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
 export const register = async ({ body, cookie, set }: any) => {
     const { username, password } = body as {
         username?: string;
@@ -31,11 +32,16 @@ export const register = async ({ body, cookie, set }: any) => {
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const config = dependencyContainer.resolve(DependencyToken.Config);
-    const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const jwtSecret = config.get('jwtSecret') as any;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const accessTokenExpiry = config.get('accessTokenExpiry') as any;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const refreshTokenExpiry = config.get('refreshTokenExpiry') as any;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const secure = config.get('secure') as any;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const sameSite = config.get('sameSite') as any;
 
     const usersCollection = database.getCollection('users');
 

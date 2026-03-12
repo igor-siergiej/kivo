@@ -2,13 +2,8 @@ import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { checkSearchRateLimit } from './middleware.js';
 
-interface SearchRequest {
-    query?: Record<string, string | string[]>;
-    request: any;
-    set: any;
-}
-
-export const search = async ({ query, request, set }: SearchRequest) => {
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
+export const search = async ({ query, request, set }: any) => {
     // Check search rate limit
     const rateLimitResult = checkSearchRateLimit(request);
 

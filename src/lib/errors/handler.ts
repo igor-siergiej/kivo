@@ -2,8 +2,10 @@ import type { Logger } from '@imapps/api-utils';
 import type { Handler } from 'elysia';
 import { APIError } from '../../types/index.js';
 
+// biome-ignore lint/suspicious/noExplicitAny: Elysia error handler context requires any type
 export function createErrorHandler(logger: Logger): Handler {
-    return ({ error }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: Elysia error context parameter is any
+    return ({ error }: any) => {
         let status = 500;
         let message = 'Internal Server Error';
 

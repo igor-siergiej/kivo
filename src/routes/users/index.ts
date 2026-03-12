@@ -1,12 +1,8 @@
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-interface GetUsersRequest {
-    body?: { usernames?: Array<string> };
-    set: any;
-}
-
-export const getUsersByUsernames = async ({ body, set }: GetUsersRequest) => {
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
+export const getUsersByUsernames = async ({ body, set }: any) => {
     const { usernames } = body as { usernames?: Array<string> };
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 

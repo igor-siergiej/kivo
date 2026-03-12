@@ -1,12 +1,8 @@
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-interface VerifyRequest {
-    headers: any;
-    set: any;
-}
-
-export const verify = async ({ headers, set }: VerifyRequest) => {
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
+export const verify = async ({ headers, set }: any) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
     const authHeader = headers.authorization;
@@ -24,7 +20,8 @@ export const verify = async ({ headers, set }: VerifyRequest) => {
 
     try {
         const { verify } = await import('jsonwebtoken');
-        const payload = verify(token, config.get('jwtSecret')) as {
+        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+        const payload = verify(token, config.get('jwtSecret') as any) as {
             aud?: string;
             username?: string;
             id?: string;

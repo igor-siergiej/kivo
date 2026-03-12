@@ -4,13 +4,8 @@ import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-interface LogoutRequest {
-    cookie: any;
-    set: any;
-    request: any;
-}
-
-export const logout = async ({ cookie, set, request }: LogoutRequest) => {
+// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
+export const logout = async ({ cookie, set, request }: any) => {
     // In Elysia, cookies need to be read from headers
     const cookieHeader = request.headers.get('cookie') || '';
     const refreshTokenMatch = cookieHeader.match(/refreshToken=([^;]*)/);
@@ -26,8 +21,10 @@ export const logout = async ({ cookie, set, request }: LogoutRequest) => {
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const config = dependencyContainer.resolve(DependencyToken.Config);
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const secure = config.get('secure') as any;
+    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
+    const sameSite = config.get('sameSite') as any;
     const sessionsCollection = database.getCollection('sessions');
 
     const tokenHash = hashToken(refreshToken);
