@@ -1,3 +1,10 @@
+## [1.7.12](https://github.com/igor-siergiej/kivo/compare/v1.7.11...v1.7.12) (2026-03-12)
+
+
+### Bug Fixes
+
+* use GH_TOKEN for Docker build node_auth_token ([fbbd5ee](https://github.com/igor-siergiej/kivo/commit/fbbd5ee198f50a80fe737875b7e290e3d78142ba))
+
 ## [1.7.11](https://github.com/igor-siergiej/kivo/compare/v1.7.10...v1.7.11) (2026-03-12)
 
 
