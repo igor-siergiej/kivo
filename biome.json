@@ -1,3 +1,6 @@
 {
-  "extends": ["@igor-siergiej/biome-config/base"]
+  "extends": ["@igor-siergiej/biome-config/base"],
+  "files": {
+    "experimentalScannerIgnores": [".github/workflows-utils"]
+  }
 }

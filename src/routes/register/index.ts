@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
+import { registrationsTotal } from '../../lib/metrics.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -19,6 +20,7 @@ export const register = async ({ body, cookie, set }: any) => {
             username: username || 'missing',
             hasPassword: !!password,
         });
+        registrationsTotal.inc({ outcome: 'missing_credentials' });
         set.status = 400;
         return { success: false, message: 'Username and password are required' };
     }
@@ -26,6 +28,7 @@ export const register = async ({ body, cookie, set }: any) => {
     // Simple password strength check (at least 8 chars incl num/letter)
     if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
         logger.warn('Registration attempt with weak password', { username });
+        registrationsTotal.inc({ outcome: 'weak_password' });
         set.status = 400;
         return { success: false, message: 'Password too weak' };
     }
@@ -48,6 +51,7 @@ export const register = async ({ body, cookie, set }: any) => {
     const existing = await usersCollection.findOne({ username });
     if (existing) {
         logger.warn('Registration attempt with existing username', { username });
+        registrationsTotal.inc({ outcome: 'username_taken' });
         set.status = 400;
         return { success: false, message: 'This username is already taken' };
     }
@@ -94,6 +98,7 @@ export const register = async ({ body, cookie, set }: any) => {
             username,
             userId: result.insertedId,
         });
+        registrationsTotal.inc({ outcome: 'success' });
 
         // Set cookie
         cookie.refreshToken.set({
@@ -112,6 +117,7 @@ export const register = async ({ body, cookie, set }: any) => {
             username,
             error: error instanceof Error ? error.message : String(error),
         });
+        registrationsTotal.inc({ outcome: 'error' });
         set.status = 500;
         return {
             success: false,

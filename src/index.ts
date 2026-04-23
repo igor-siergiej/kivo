@@ -5,6 +5,14 @@ import Elysia from 'elysia';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { initializeDatabase } from './lib/database/init.js';
 import { DependencyToken } from './lib/dependencyContainer/types.js';
+import {
+    httpRequestDurationSeconds,
+    httpRequestsTotal,
+    metricsRegister,
+    normalizePath,
+    rateLimitHitsTotal,
+    startDefaultMetrics,
+} from './lib/metrics.js';
 import { checkGlobalRateLimit } from './middleware/rateLimit.js';
 import { login } from './routes/login/index.js';
 import { logout } from './routes/logout/index.js';
@@ -16,6 +24,7 @@ import { verify } from './routes/verify/index.js';
 
 export const onStartup = async () => {
     try {
+        startDefaultMetrics();
         registerDepdendencies();
 
         const database = dependencyContainer.resolve(DependencyToken.Database);
@@ -83,15 +92,43 @@ export const onStartup = async () => {
 
         // Global request hooks
         app.onBeforeHandle(({ request, set }) => {
-            // Check rate limit
+            const url = new URL(request.url);
+            // Skip rate limit for Prometheus scrape endpoint; scraping would
+            // otherwise consume the per-IP budget on busy nodes.
+            if (url.pathname === '/metrics' || url.pathname === '/health') {
+                return;
+            }
+
             const rateLimitResult = checkGlobalRateLimit(request);
             if (!rateLimitResult.allowed) {
+                rateLimitHitsTotal.inc();
                 set.status = 429;
                 return {
                     success: false,
                     message: 'Too many requests, please slow down.',
                     retryAfter: rateLimitResult.retryAfter,
                 };
+            }
+        });
+
+        // Per-request timing for Prometheus histogram. Stored on the request
+        // object because Elysia's `store` is app-wide, not per-request.
+        const requestStartTimes = new WeakMap<Request, number>();
+        app.onRequest(({ request }) => {
+            requestStartTimes.set(request, performance.now());
+        });
+
+        app.onAfterResponse(({ request, set }) => {
+            const start = requestStartTimes.get(request);
+            requestStartTimes.delete(request);
+            const url = new URL(request.url);
+            const path = normalizePath(url.pathname);
+            const status = String(set.status || 200);
+            const labels = { method: request.method, path, status };
+
+            httpRequestsTotal.inc(labels);
+            if (start !== undefined) {
+                httpRequestDurationSeconds.observe(labels, (performance.now() - start) / 1000);
             }
         });
 
@@ -160,6 +197,12 @@ export const onStartup = async () => {
             service: 'kivo',
             timestamp: new Date().toISOString(),
         }));
+
+        // Prometheus metrics endpoint
+        app.get('/metrics', async ({ set }) => {
+            set.headers['Content-Type'] = metricsRegister.contentType;
+            return await metricsRegister.metrics();
+        });
 
         // Auth routes
         app.post('/login', login);

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
+import { authAttemptsTotal } from '../../lib/metrics.js';
 
 interface IUser {
     _id?: ObjectId;
@@ -25,6 +26,7 @@ export const login = async ({ body, cookie, set }: any) => {
             username: username || 'missing',
             hasPassword: !!password,
         });
+        authAttemptsTotal.inc({ endpoint: 'login', outcome: 'missing_credentials' });
         set.status = 400;
         return {
             success: false,
@@ -39,6 +41,7 @@ export const login = async ({ body, cookie, set }: any) => {
 
     if (!user) {
         logger.warn('Login attempt with non-existent user', { username });
+        authAttemptsTotal.inc({ endpoint: 'login', outcome: 'unknown_user' });
         set.status = 401;
         return { success: false, message: 'Invalid username or password' };
     }
@@ -46,6 +49,7 @@ export const login = async ({ body, cookie, set }: any) => {
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
         logger.warn('Login attempt with invalid password', { username });
+        authAttemptsTotal.inc({ endpoint: 'login', outcome: 'invalid_password' });
         set.status = 401;
         return { success: false, message: 'Invalid username or password' };
     }
@@ -91,6 +95,7 @@ export const login = async ({ body, cookie, set }: any) => {
     });
 
     logger.info('User login successful', { username, userId: user._id });
+    authAttemptsTotal.inc({ endpoint: 'login', outcome: 'success' });
 
     // Set cookie with Elysia's cookie API
     cookie.refreshToken.set({

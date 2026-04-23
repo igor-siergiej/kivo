@@ -1,4 +1,5 @@
 // biome-ignore-all lint/correctness/noConstructorReturn: I need to figure out a better way to do this
+// biome-ignore-all lint/suspicious/noExplicitAny: Config instance wrapper requires any type
 import { Logger, MongoDbConnection } from '@igor-siergiej/api-utils';
 import { config } from './lib/config';
 import { dependencyContainer } from './lib/dependencyContainer';
@@ -10,10 +11,8 @@ export const registerDepdendencies = () => {
     // Register the config instance directly rather than the class
     dependencyContainer.registerSingleton(
         DependencyToken.Config,
-        // biome-ignore lint/suspicious/noExplicitAny: Config instance wrapper requires any type
         class {
             constructor() {
-                // biome-ignore lint/suspicious/noExplicitAny: Config instance requires any type
                 return config as any;
             }
         } as any
