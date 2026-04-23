@@ -62,4 +62,17 @@ export const normalizePath = (path: string): string => {
     return 'other';
 };
 
+// Pre-warm label series at zero so Prometheus `increase(...)` queries have a
+// baseline sample to diff against — otherwise a counter that first appears
+// mid-window shows up as zero growth.
+const LOGIN_OUTCOMES = ['success', 'missing_credentials', 'unknown_user', 'invalid_password'] as const;
+const REGISTRATION_OUTCOMES = ['success', 'missing_credentials', 'weak_password', 'username_taken', 'error'] as const;
+
+for (const outcome of LOGIN_OUTCOMES) {
+    authAttemptsTotal.inc({ endpoint: 'login', outcome }, 0);
+}
+for (const outcome of REGISTRATION_OUTCOMES) {
+    registrationsTotal.inc({ outcome }, 0);
+}
+
 export const metricsRegister = register;
