@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/igor-siergiej/kivo/compare/v1.8.0...v1.8.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* **metrics:** pre-warm auth counter labels so increase() works ([bd25465](https://github.com/igor-siergiej/kivo/commit/bd25465553746e04c636c03e7e2bc1942af36b4f))
+
 # [1.8.0](https://github.com/igor-siergiej/kivo/compare/v1.7.12...v1.8.0) (2026-04-23)
 
 
