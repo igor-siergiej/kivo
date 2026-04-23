@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/igor-siergiej/kivo/compare/v1.7.12...v1.8.0) (2026-04-23)
+
+
+### Features
+
+* add Prometheus metrics, deploy stage, and lint fixes ([a735405](https://github.com/igor-siergiej/kivo/commit/a7354054485bbbba6217f7eeb31582b0d4355848))
+
 ## [1.7.12](https://github.com/igor-siergiej/kivo/compare/v1.7.11...v1.7.12) (2026-03-12)
 
 
