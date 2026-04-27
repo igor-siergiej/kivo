@@ -8,7 +8,7 @@
         "@elysiajs/cookie": "latest",
         "@elysiajs/cors": "latest",
         "@elysiajs/jwt": "latest",
-        "@igor-siergiej/api-utils": "0.5.0",
+        "@imapps/api-utils": "0.5.1",
         "bcryptjs": "^3.0.2",
         "elysia": "latest",
         "jsonwebtoken": "^9.0.2",
@@ -17,7 +17,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "2.2.5",
-        "@igor-siergiej/biome-config": "0.5.0",
+        "@imapps/biome-config": "0.5.1",
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/git": "^10.0.1",
         "@types/bcryptjs": "^3.0.0",
@@ -62,9 +62,9 @@
 
     "@elysiajs/jwt": ["@elysiajs/jwt@1.4.1", "", { "dependencies": { "jose": "^6.0.11" }, "peerDependencies": { "elysia": ">= 1.4.27" } }, "sha512-Qx28XE7hUf2XK/+HZB+hOBGSq6dPs4u1lk80wNge9jijAfzCwftxjOiAWO57RKYSEMdJTOG1ItEL5fbXjJyWsA=="],
 
-    "@igor-siergiej/api-utils": ["@igor-siergiej/api-utils@0.5.0", "https://npm.pkg.github.com/download/@igor-siergiej/api-utils/0.5.0/fa923691d19a3b8f97959b822a20fedff17f6f46", { "dependencies": { "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-v4vaqElFUnoPaTSyO3AzcE6w8NV/dh3saKvDant9iS/Oei8VLTub13cMi5vrMobKAiVfifF+bGJoXWWv6xeCNg=="],
+    "@imapps/api-utils": ["@imapps/api-utils@0.5.1", "", { "dependencies": { "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-Uy1bVNsgkDPKhZXjAl4eL1VnRafJACSwsXYUKWfu9nzmsQHAX4OMauXarj/tzCJcOchhu/UWEPd/fMYbYyZNzg=="],
 
-    "@igor-siergiej/biome-config": ["@igor-siergiej/biome-config@0.5.0", "https://npm.pkg.github.com/download/@igor-siergiej/biome-config/0.5.0/feea78c4ffb3b1e798fd2a333dcadf1e46d52d4c", { "peerDependencies": { "@biomejs/biome": "^2.0.0" } }, "sha512-N0FjI4cyfPignRjxpZDvMmcIB5fSJGNmo3Eg3UWNvTzTlnxB8qOtbk/+ayLyi5qLsVxvQeeG1EpCP2HlzPRpGg=="],
+    "@imapps/biome-config": ["@imapps/biome-config@0.5.1", "", { "peerDependencies": { "@biomejs/biome": "^2.0.0" } }, "sha512-SrGHvSi7HvXDyiPdc5o4e2sLtOfXawtpm56vO+bbtcI+MiILUG91ylNsHEeftJSM0iOUEqZSEwvJvWgwjbCocw=="],
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.4.6", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-y+x3H1xBZd38n10NZF/rEBlvDOOMQ6LKUTHqr8R9VkJ+mmQOYtJFxIlkkK8fZrtOiL6VixbOBWMbZGBdal3Z1g=="],
 

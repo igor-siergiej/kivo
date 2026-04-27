@@ -18,7 +18,7 @@
     "@elysiajs/cookie": "latest",
     "@elysiajs/cors": "latest",
     "@elysiajs/jwt": "latest",
-    "@igor-siergiej/api-utils": "0.5.0",
+    "@imapps/api-utils": "0.5.1",
     "bcryptjs": "^3.0.2",
     "elysia": "latest",
     "jsonwebtoken": "^9.0.2",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.5",
-    "@igor-siergiej/biome-config": "0.5.0",
+    "@imapps/biome-config": "0.5.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/bcryptjs": "^3.0.0",

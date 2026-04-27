@@ -1,4 +1,4 @@
-import { DependencyContainer as BaseDependencyContainer } from '@igor-siergiej/api-utils';
+import { DependencyContainer as BaseDependencyContainer } from '@imapps/api-utils';
 import type { Dependencies } from './types';
 
 // Export a typed version of the DependencyContainer

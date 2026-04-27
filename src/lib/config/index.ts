@@ -1,4 +1,4 @@
-import { ConfigService as BaseConfigService, parsers } from '@igor-siergiej/api-utils';
+import { ConfigService as BaseConfigService, parsers } from '@imapps/api-utils';
 
 const schema = {
     port: { parser: parsers.number, from: 'PORT' },

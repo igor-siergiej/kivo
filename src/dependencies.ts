@@ -1,6 +1,6 @@
 // biome-ignore-all lint/correctness/noConstructorReturn: I need to figure out a better way to do this
 // biome-ignore-all lint/suspicious/noExplicitAny: Config instance wrapper requires any type
-import { Logger, MongoDbConnection } from '@igor-siergiej/api-utils';
+import { Logger, MongoDbConnection } from '@imapps/api-utils';
 import { config } from './lib/config';
 import { dependencyContainer } from './lib/dependencyContainer';
 import { DependencyToken } from './lib/dependencyContainer/types';
