@@ -3,53 +3,25 @@ name: CI/CD
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: '*'
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: bun run lint
-
-  test:
-    runs-on: ubuntu-latest
-    needs: lint
-    permissions:
-      packages: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: bun test
+    uses: igor-siergiej/utils/.github/workflows/reusable-lint-test.yml@main
+    with:
+      test-command: 'bun test'
+    secrets: inherit
 
   release:
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: write
-      packages: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: bunx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    if: github.event_name == 'push'
+    needs: lint
+    uses: igor-siergiej/utils/.github/workflows/reusable-release.yml@main
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: release
     permissions:
@@ -77,9 +49,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   deploy:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: build-publish
-    if: success()
     steps:
       - name: Trigger API deployment
         run: |
