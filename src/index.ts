@@ -1,5 +1,7 @@
-import { errorHandler, requestLogger } from '@imapps/api-utils/hono';
+import { requestLogger } from '@imapps/api-utils/hono';
 import { Hono } from 'hono';
+
+import { createErrorHandler } from './lib/errors/handler.js';
 import { cors } from 'hono/cors';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { initializeDatabase } from './lib/database/init.js';
@@ -122,7 +124,7 @@ export const onStartup = async () => {
         });
 
         // Error handler
-        app.onError(errorHandler);
+        app.onError(createErrorHandler(logger));
 
         // Health check
         app.get('/health', (c) =>
