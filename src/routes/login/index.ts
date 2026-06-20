@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import type { Context } from 'hono';
+import { setCookie } from 'hono/cookie';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
@@ -13,12 +15,9 @@ interface IUser {
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const login = async ({ body, cookie, set }: any) => {
-    const { username, password } = body as {
-        username?: string;
-        password?: string;
-    };
+export const login = async (c: Context) => {
+    const body = await c.req.json<{ username?: string; password?: string }>();
+    const { username, password } = body;
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
@@ -27,11 +26,7 @@ export const login = async ({ body, cookie, set }: any) => {
             hasPassword: !!password,
         });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'missing_credentials' });
-        set.status = 400;
-        return {
-            success: false,
-            message: 'Username and password are required',
-        };
+        return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
@@ -42,16 +37,14 @@ export const login = async ({ body, cookie, set }: any) => {
     if (!user) {
         logger.warn('Login attempt with non-existent user', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'unknown_user' });
-        set.status = 401;
-        return { success: false, message: 'Invalid username or password' };
+        return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
         logger.warn('Login attempt with invalid password', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'invalid_password' });
-        set.status = 401;
-        return { success: false, message: 'Invalid username or password' };
+        return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 
     const config = dependencyContainer.resolve(DependencyToken.Config);
@@ -73,7 +66,6 @@ export const login = async ({ body, cookie, set }: any) => {
         aud: 'kivo',
     };
 
-    // Sign tokens using jsonwebtoken library directly (as Elysia JWT plugin is for verification)
     const { sign } = await import('jsonwebtoken');
     const accessToken = sign(tokenPayload, jwtSecret, {
         expiresIn: accessTokenExpiry,
@@ -82,8 +74,8 @@ export const login = async ({ body, cookie, set }: any) => {
         expiresIn: refreshTokenExpiry,
     });
 
-    set.headers['Cache-Control'] = 'no-store';
-    set.headers.Pragma = 'no-cache';
+    c.header('Cache-Control', 'no-store');
+    c.header('Pragma', 'no-cache');
 
     const sessionsCollection = database.getCollection('sessions');
     const tokenHash = hashToken(refreshToken);
@@ -97,16 +89,12 @@ export const login = async ({ body, cookie, set }: any) => {
     logger.info('User login successful', { username, userId: user._id });
     authAttemptsTotal.inc({ endpoint: 'login', outcome: 'success' });
 
-    // Set cookie with Elysia's cookie API
-    cookie.refreshToken.set({
-        value: refreshToken,
+    setCookie(c, 'refreshToken', refreshToken, {
         httpOnly: true,
         secure,
         sameSite,
-        maxAge: 30 * 24 * 60 * 60, // seconds, not milliseconds like Koa
+        maxAge: 30 * 24 * 60 * 60,
     });
 
-    return {
-        accessToken,
-    };
+    return c.json({ accessToken });
 };

@@ -1,86 +1,76 @@
+import type { Context } from 'hono';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { checkSearchRateLimit } from './middleware.js';
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const search = async ({ query, request, set }: any) => {
-    // Check search rate limit
-    const rateLimitResult = checkSearchRateLimit(request);
+export const search = async (c: Context) => {
+    const rateLimitResult = checkSearchRateLimit(c.req.raw);
 
-    // Apply security headers
-    set.headers['X-Content-Type-Options'] = 'nosniff';
-    set.headers['X-Frame-Options'] = 'DENY';
-    set.headers['X-XSS-Protection'] = '1; mode=block';
-    set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate';
-    set.headers.Pragma = 'no-cache';
-    set.headers.Expires = '0';
+    c.header('X-Content-Type-Options', 'nosniff');
+    c.header('X-Frame-Options', 'DENY');
+    c.header('X-XSS-Protection', '1; mode=block');
+    c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    c.header('Pragma', 'no-cache');
+    c.header('Expires', '0');
 
     if (!rateLimitResult.allowed) {
-        set.status = 429;
-        return {
-            success: false,
-            message: 'Search rate limit exceeded. Please try again later.',
-            retryAfter: rateLimitResult.retryAfter,
-        };
+        return c.json(
+            {
+                success: false,
+                message: 'Search rate limit exceeded. Please try again later.',
+                retryAfter: rateLimitResult.retryAfter,
+            },
+            429
+        );
     }
-    const { q: rawQuery, limit = '10' } = query as {
-        q?: string;
-        limit?: string;
-    };
+
+    const rawQuery = c.req.query('q');
+    const limit = c.req.query('limit') ?? '10';
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-    // Input validation and sanitization
     if (!rawQuery || typeof rawQuery !== 'string') {
         logger.warn('User search with missing or invalid query parameter');
-        set.status = 400;
-        return {
-            success: false,
-            message: 'Query parameter "q" is required and must be a string',
-        };
+        return c.json(
+            {
+                success: false,
+                message: 'Query parameter "q" is required and must be a string',
+            },
+            400
+        );
     }
 
-    // Sanitize and validate query length
     const sanitizedQuery = rawQuery.trim().toLowerCase();
     if (sanitizedQuery.length < 2) {
         logger.warn('User search with query too short', {
             queryLength: sanitizedQuery.length,
         });
-        set.status = 400;
-        return { success: false, message: 'Query must be at least 2 characters long' };
+        return c.json({ success: false, message: 'Query must be at least 2 characters long' }, 400);
     }
 
     if (sanitizedQuery.length > 50) {
         logger.warn('User search with query too long', {
             queryLength: sanitizedQuery.length,
         });
-        set.status = 400;
-        return {
-            success: false,
-            message: 'Query too long (max 50 characters)',
-        };
+        return c.json({ success: false, message: 'Query too long (max 50 characters)' }, 400);
     }
 
-    // Validate and parse limit
     const parsedLimit = parseInt(limit, 10);
     if (Number.isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
         logger.warn('User search with invalid limit', { limit });
-        set.status = 400;
-        return { success: false, message: 'Limit must be between 1 and 20' };
+        return c.json({ success: false, message: 'Limit must be between 1 and 20' }, 400);
     }
 
     try {
         const database = dependencyContainer.resolve(DependencyToken.Database);
         if (!database) {
             logger.error('Database service not available');
-            set.status = 503;
-            return { success: false, message: 'Service unavailable' };
+            return c.json({ success: false, message: 'Service unavailable' }, 503);
         }
 
         const usersCollection = database.getCollection('users');
         let results: Array<{ username: string; score?: number }> = [];
 
         try {
-            // Try text search first
             results = await usersCollection
                 .find(
                     { $text: { $search: sanitizedQuery } },
@@ -99,7 +89,6 @@ export const search = async ({ query, request, set }: any) => {
                 )
                 .toArray();
         } catch (textSearchError) {
-            // Text search might fail if index doesn't exist, fall back to regex
             logger.warn('Text search failed, falling back to regex', {
                 error: textSearchError,
             });
@@ -131,18 +120,17 @@ export const search = async ({ query, request, set }: any) => {
             limit: parsedLimit,
         });
 
-        set.headers['Cache-Control'] = 'public, max-age=30';
-        set.headers['X-Query-Time'] = Date.now().toString();
+        c.header('Cache-Control', 'public, max-age=30');
+        c.header('X-Query-Time', Date.now().toString());
 
-        return {
+        return c.json({
             success: true,
             usernames,
             count: usernames.length,
             query: sanitizedQuery,
-        };
+        });
     } catch (error) {
         logger.error('User search error', error);
-        set.status = 500;
-        return { success: false, message: 'Internal server error' };
+        return c.json({ success: false, message: 'Internal server error' }, 500);
     }
 };

@@ -1,7 +1,8 @@
-import type { Context } from 'elysia';
+import type { Context, Next } from 'hono';
 
-export function applySecurityHeaders(ctx: Context) {
-    ctx.set.headers['X-Content-Type-Options'] = 'nosniff';
-    ctx.set.headers['X-Frame-Options'] = 'DENY';
-    ctx.set.headers['X-XSS-Protection'] = '1; mode=block';
+export async function applySecurityHeaders(c: Context, next: Next) {
+    await next();
+    c.res.headers.set('X-Content-Type-Options', 'nosniff');
+    c.res.headers.set('X-Frame-Options', 'DENY');
+    c.res.headers.set('X-XSS-Protection', '1; mode=block');
 }

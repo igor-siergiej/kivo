@@ -1,12 +1,13 @@
 import crypto from 'node:crypto';
+import type { Context } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const refresh = async ({ cookie, set, request }: any) => {
+export const refresh = async (c: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
@@ -21,15 +22,11 @@ export const refresh = async ({ cookie, set, request }: any) => {
     // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
     const sameSite = config.get('sameSite') as any;
 
-    // In Elysia, cookies need to be read from headers
-    const cookieHeader = request.headers.get('cookie') || '';
-    const refreshTokenMatch = cookieHeader.match(/refreshToken=([^;]*)/);
-    const refreshToken = refreshTokenMatch ? refreshTokenMatch[1] : null;
+    const refreshToken = getCookie(c, 'refreshToken');
 
     if (!refreshToken) {
         logger.warn('Token refresh attempt with missing refresh token');
-        set.status = 400;
-        return { success: false, message: 'refreshToken cookie missing' };
+        return c.json({ success: false, message: 'refreshToken cookie missing' }, 400);
     }
 
     try {
@@ -43,8 +40,7 @@ export const refresh = async ({ cookie, set, request }: any) => {
             logger.warn('Token refresh failed: invalid audience', {
                 audience: payload.aud,
             });
-            set.status = 401;
-            return { success: false, message: 'Invalid session' };
+            return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
         const username = payload.sub;
@@ -60,24 +56,18 @@ export const refresh = async ({ cookie, set, request }: any) => {
         });
 
         if (!session) {
-            logger.warn('Token refresh failed: session not found', {
-                username,
-            });
-            set.status = 401;
-            return { success: false, message: 'Invalid session' };
+            logger.warn('Token refresh failed: session not found', { username });
+            return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
-        // Get user to include ID in tokens
         const usersCollection = database.getCollection('users');
         const user = await usersCollection.findOne({ username });
 
         if (!user) {
             logger.warn('Token refresh failed: user not found', { username });
-            set.status = 401;
-            return { success: false, message: 'Authentication failed' };
+            return c.json({ success: false, message: 'Authentication failed' }, 401);
         }
 
-        // Session valid – issue new tokens
         const { sign } = await import('jsonwebtoken');
         const newAccessToken = sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, {
             expiresIn: accessTokenExpiry,
@@ -88,7 +78,6 @@ export const refresh = async ({ cookie, set, request }: any) => {
 
         const newTokenHash = hashToken(newRefreshToken);
 
-        // Store new session and delete old one atomically
         await sessionsCollection.insertOne({
             _id: new ObjectId(),
             username,
@@ -99,43 +88,33 @@ export const refresh = async ({ cookie, set, request }: any) => {
 
         logger.info('Token refreshed successfully', { username });
 
-        // Prevent caching of sensitive token response
-        set.headers['Cache-Control'] = 'no-store';
-        set.headers.Pragma = 'no-cache';
+        c.header('Cache-Control', 'no-store');
+        c.header('Pragma', 'no-cache');
 
-        // Set new refresh token cookie
-        cookie.refreshToken.set({
-            value: newRefreshToken,
+        setCookie(c, 'refreshToken', newRefreshToken, {
             httpOnly: true,
             secure,
             sameSite,
-            maxAge: 30 * 24 * 60 * 60, // seconds
+            maxAge: 30 * 24 * 60 * 60,
         });
 
-        return {
-            accessToken: newAccessToken,
-        };
+        return c.json({ accessToken: newAccessToken });
     } catch (error) {
-        // Handle expected token expiration separately from unexpected errors
         const { TokenExpiredError, JsonWebTokenError } = await import('jsonwebtoken');
 
         if (error instanceof TokenExpiredError) {
             logger.warn('Token refresh failed: refresh token expired');
-            set.status = 403;
-            return { success: false, message: 'Refresh token expired' };
+            return c.json({ success: false, message: 'Refresh token expired' }, 403);
         }
 
         if (error instanceof JsonWebTokenError) {
             logger.warn('Token refresh failed: invalid refresh token', {
                 error: (error as Error).message,
             });
-            set.status = 401;
-            return { success: false, message: 'Invalid refresh token' };
+            return c.json({ success: false, message: 'Invalid refresh token' }, 401);
         }
 
-        // Log unexpected errors
         logger.error('Error refreshing token', error);
-        set.status = 500;
-        return { success: false, message: 'Internal server error' };
+        return c.json({ success: false, message: 'Internal server error' }, 500);
     }
 };
