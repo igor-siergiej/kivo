@@ -1,30 +1,29 @@
+import type { Context } from 'hono';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const getUsersByUsernames = async ({ body, set }: any) => {
-    const { usernames } = body as { usernames?: Array<string> };
+export const getUsersByUsernames = async (c: Context) => {
+    const body = await c.req.json<{ usernames?: Array<string> }>();
+    const { usernames } = body;
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!usernames || !Array.isArray(usernames)) {
         logger.warn('Get users request with invalid usernames format', {
             receivedType: Array.isArray(usernames) ? 'array' : typeof usernames,
         });
-        set.status = 400;
-        return { success: false, message: 'usernames array is required' };
+        return c.json({ success: false, message: 'usernames array is required' }, 400);
     }
 
     if (usernames.length === 0) {
         logger.info('Get users request with empty usernames array');
-        return { success: true, users: [] };
+        return c.json({ success: true, users: [] });
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
 
     if (!database) {
         logger.error('Database service not available');
-        set.status = 503;
-        return { success: false, message: 'Service unavailable' };
+        return c.json({ success: false, message: 'Service unavailable' }, 503);
     }
 
     const usersCollection = database.getCollection('users');
@@ -45,24 +44,26 @@ export const getUsersByUsernames = async ({ body, set }: any) => {
             notFoundUsernames,
         });
 
-        return {
+        return c.json({
             success: true,
             users: users.map((user) => ({
                 id: user._id.toString(),
                 username: user.username,
             })),
             notFoundUsernames,
-        };
+        });
     } catch (error) {
         logger.error('Error fetching users', {
             requestedUsernames: usernames,
             error: error instanceof Error ? error.message : String(error),
         });
-        set.status = 500;
-        return {
-            success: false,
-            message: 'Internal server error',
-            notFoundUsernames: [],
-        };
+        return c.json(
+            {
+                success: false,
+                message: 'Internal server error',
+                notFoundUsernames: [],
+            },
+            500
+        );
     }
 };

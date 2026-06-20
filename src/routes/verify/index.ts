@@ -1,27 +1,29 @@
+import type { Context } from 'hono';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const verify = async ({ headers, set }: any) => {
+export const verify = async (c: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
-    const authHeader = headers.authorization;
+    const authHeader = c.req.header('authorization');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         logger.warn('Token verification attempt with missing or malformed auth header');
-        set.status = 401;
-        return {
-            success: false,
-            message: 'Authorization header missing or malformed',
-        };
+        return c.json(
+            {
+                success: false,
+                message: 'Authorization header missing or malformed',
+            },
+            401
+        );
     }
 
     const token = authHeader.split(' ')[1];
 
     try {
-        const { verify } = await import('jsonwebtoken');
+        const { verify: jwtVerify } = await import('jsonwebtoken');
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const payload = verify(token, config.get('jwtSecret') as any) as {
+        const payload = jwtVerify(token, config.get('jwtSecret') as any) as {
             aud?: string;
             username?: string;
             id?: string;
@@ -31,38 +33,32 @@ export const verify = async ({ headers, set }: any) => {
             logger.warn('Token verification failed: invalid audience', {
                 audience: payload.aud,
             });
-            set.status = 401;
-            return { success: false, message: 'Invalid or expired token' };
+            return c.json({ success: false, message: 'Invalid or expired token' }, 401);
         }
 
         logger.info('Token verified successfully', {
             username: payload.username,
         });
-        return {
+        return c.json({
             success: true,
             payload: { id: payload.id, username: payload.username },
-        };
+        });
     } catch (error) {
         const { TokenExpiredError, JsonWebTokenError } = await import('jsonwebtoken');
 
-        // Handle expected token expiration and invalid tokens without logging errors
         if (error instanceof TokenExpiredError) {
             logger.warn('Token verification failed: token expired');
-            set.status = 401;
-            return { success: false, message: 'Token expired' };
+            return c.json({ success: false, message: 'Token expired' }, 401);
         }
 
         if (error instanceof JsonWebTokenError) {
             logger.warn('Token verification failed: invalid token', {
                 error: (error as Error).message,
             });
-            set.status = 401;
-            return { success: false, message: 'Invalid token' };
+            return c.json({ success: false, message: 'Invalid token' }, 401);
         }
 
-        // Log unexpected errors
         logger.error('Error verifying token', error);
-        set.status = 500;
-        return { success: false, message: 'Internal server error' };
+        return c.json({ success: false, message: 'Internal server error' }, 500);
     }
 };

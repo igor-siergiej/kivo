@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import type { Context } from 'hono';
+import { setCookie } from 'hono/cookie';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
@@ -7,12 +9,9 @@ import { registrationsTotal } from '../../lib/metrics.js';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const register = async ({ body, cookie, set }: any) => {
-    const { username, password } = body as {
-        username?: string;
-        password?: string;
-    };
+export const register = async (c: Context) => {
+    const body = await c.req.json<{ username?: string; password?: string }>();
+    const { username, password } = body;
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
@@ -21,16 +20,13 @@ export const register = async ({ body, cookie, set }: any) => {
             hasPassword: !!password,
         });
         registrationsTotal.inc({ outcome: 'missing_credentials' });
-        set.status = 400;
-        return { success: false, message: 'Username and password are required' };
+        return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
-    // Simple password strength check (at least 8 chars incl num/letter)
     if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
         logger.warn('Registration attempt with weak password', { username });
         registrationsTotal.inc({ outcome: 'weak_password' });
-        set.status = 400;
-        return { success: false, message: 'Password too weak' };
+        return c.json({ success: false, message: 'Password too weak' }, 400);
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
@@ -52,8 +48,7 @@ export const register = async ({ body, cookie, set }: any) => {
     if (existing) {
         logger.warn('Registration attempt with existing username', { username });
         registrationsTotal.inc({ outcome: 'username_taken' });
-        set.status = 400;
-        return { success: false, message: 'This username is already taken' };
+        return c.json({ success: false, message: 'This username is already taken' }, 400);
     }
 
     try {
@@ -65,7 +60,6 @@ export const register = async ({ body, cookie, set }: any) => {
             passwordHash,
         });
 
-        // Generate tokens
         const { sign } = await import('jsonwebtoken');
         const tokenPayload = {
             sub: username,
@@ -80,11 +74,9 @@ export const register = async ({ body, cookie, set }: any) => {
             expiresIn: refreshTokenExpiry,
         });
 
-        // Prevent caching of tokens
-        set.headers['Cache-Control'] = 'no-store';
-        set.headers.Pragma = 'no-cache';
+        c.header('Cache-Control', 'no-store');
+        c.header('Pragma', 'no-cache');
 
-        // Save session with hashed refresh token
         const sessionsCollection = database.getCollection('sessions');
         const tokenHash = hashToken(refreshToken);
         await sessionsCollection.insertOne({
@@ -100,28 +92,20 @@ export const register = async ({ body, cookie, set }: any) => {
         });
         registrationsTotal.inc({ outcome: 'success' });
 
-        // Set cookie
-        cookie.refreshToken.set({
-            value: refreshToken,
+        setCookie(c, 'refreshToken', refreshToken, {
             httpOnly: true,
             secure,
             sameSite,
-            maxAge: 30 * 24 * 60 * 60, // seconds
+            maxAge: 30 * 24 * 60 * 60,
         });
 
-        return {
-            accessToken,
-        };
+        return c.json({ accessToken });
     } catch (error) {
         logger.error('User registration failed', {
             username,
             error: error instanceof Error ? error.message : String(error),
         });
         registrationsTotal.inc({ outcome: 'error' });
-        set.status = 500;
-        return {
-            success: false,
-            message: 'Registration failed. Please try again.',
-        };
+        return c.json({ success: false, message: 'Registration failed. Please try again.' }, 500);
     }
 };

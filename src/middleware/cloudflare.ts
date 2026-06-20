@@ -1,16 +1,16 @@
-import type { Context } from 'elysia';
+import type { Context, Next } from 'hono';
 
-export function processCloudflareHeaders(ctx: Context) {
-    // Process CF-Visitor header to set protocol
-    const cfVisitor = ctx.request.headers.get('cf-visitor');
+export async function processCloudflareHeaders(c: Context, next: Next) {
+    const cfVisitor = c.req.header('cf-visitor');
     if (cfVisitor) {
         try {
             const visitor = JSON.parse(cfVisitor) as { scheme: string };
             if (visitor.scheme === 'https') {
-                ctx.set.headers['X-Forwarded-Proto'] = 'https';
+                c.res.headers.set('X-Forwarded-Proto', 'https');
             }
         } catch {
             // Ignore parsing errors
         }
     }
+    await next();
 }

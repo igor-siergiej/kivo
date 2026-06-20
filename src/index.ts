@@ -1,7 +1,8 @@
-import { cookie } from '@elysiajs/cookie';
-import { cors } from '@elysiajs/cors';
-import { jwt } from '@elysiajs/jwt';
-import Elysia from 'elysia';
+import { requestLogger } from '@imapps/api-utils/hono';
+import { Hono } from 'hono';
+
+import { createErrorHandler } from './lib/errors/handler.js';
+import { cors } from 'hono/cors';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { initializeDatabase } from './lib/database/init.js';
 import { DependencyToken } from './lib/dependencyContainer/types.js';
@@ -13,7 +14,9 @@ import {
     rateLimitHitsTotal,
     startDefaultMetrics,
 } from './lib/metrics.js';
+import { processCloudflareHeaders } from './middleware/cloudflare.js';
 import { checkGlobalRateLimit } from './middleware/rateLimit.js';
+import { applySecurityHeaders } from './middleware/security.js';
 import { login } from './routes/login/index.js';
 import { logout } from './routes/logout/index.js';
 import { refresh } from './routes/refresh/index.js';
@@ -53,155 +56,89 @@ export const onStartup = async () => {
         });
         logger.info('Database indexes created');
 
-        // Setup CORS configuration from environment
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
         const corsOriginsList = (config.get('corsAllowedOrigins') as any).split(',').map((o: string) => o.trim());
 
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const jwtSecret = config.get('jwtSecret') as any;
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const secure = config.get('secure') as any;
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const sameSite = config.get('sameSite') as any;
+        const app = new Hono();
 
-        const app = new Elysia()
-            // Register cookie plugin first (needed for refresh, login, logout)
-            .use(
-                cookie({
-                    secure,
-                    httpOnly: true,
-                    sameSite,
-                })
-            )
-            // Register CORS plugin
-            .use(
-                cors({
-                    allowedHeaders: ['Content-Type', 'Authorization', 'Origin'],
-                    credentials: true,
-                    methods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
-                    origin: corsOriginsList,
-                })
-            )
-            // Register JWT plugin
-            .use(
-                jwt({
-                    name: 'jwt',
-                    secret: jwtSecret,
-                })
-            );
+        // CORS
+        app.use(
+            '*',
+            cors({
+                allowHeaders: ['Content-Type', 'Authorization', 'Origin'],
+                credentials: true,
+                allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+                origin: (origin) => (corsOriginsList.includes(origin) ? origin : null),
+            })
+        );
 
-        // Global request hooks
-        app.onBeforeHandle(({ request, set }) => {
-            const url = new URL(request.url);
-            // Skip rate limit for Prometheus scrape endpoint; scraping would
-            // otherwise consume the per-IP budget on busy nodes.
-            if (url.pathname === '/metrics' || url.pathname === '/health') {
-                return;
-            }
+        // Request logger
+        app.use('*', requestLogger(logger));
 
-            const rateLimitResult = checkGlobalRateLimit(request);
-            if (!rateLimitResult.allowed) {
-                rateLimitHitsTotal.inc();
-                set.status = 429;
-                return {
-                    success: false,
-                    message: 'Too many requests, please slow down.',
-                    retryAfter: rateLimitResult.retryAfter,
-                };
-            }
-        });
+        // Cloudflare header processing
+        app.use('*', processCloudflareHeaders);
 
-        // Per-request timing for Prometheus histogram. Stored on the request
-        // object because Elysia's `store` is app-wide, not per-request.
+        // Security headers
+        app.use('*', applySecurityHeaders);
+
+        // Per-request timing for Prometheus histogram
         const requestStartTimes = new WeakMap<Request, number>();
-        app.onRequest(({ request }) => {
-            requestStartTimes.set(request, performance.now());
-        });
 
-        app.onAfterResponse(({ request, set }) => {
-            const start = requestStartTimes.get(request);
-            requestStartTimes.delete(request);
-            const url = new URL(request.url);
-            const path = normalizePath(url.pathname);
-            const status = String(set.status || 200);
-            const labels = { method: request.method, path, status };
+        app.use('*', async (c, next) => {
+            requestStartTimes.set(c.req.raw, performance.now());
+            await next();
+
+            const url = c.req.path;
+            const path = normalizePath(url);
+            const status = String(c.res.status || 200);
+            const labels = { method: c.req.method, path, status };
 
             httpRequestsTotal.inc(labels);
+            const start = requestStartTimes.get(c.req.raw);
+            requestStartTimes.delete(c.req.raw);
             if (start !== undefined) {
                 httpRequestDurationSeconds.observe(labels, (performance.now() - start) / 1000);
             }
         });
 
-        // Cloudflare header processing
-        app.onRequest(async ({ request }) => {
-            const cfVisitor = request.headers.get('cf-visitor');
-            if (cfVisitor) {
-                try {
-                    const parsed = JSON.parse(cfVisitor);
-                    if (parsed.scheme === 'https') {
-                        request.headers.set('x-forwarded-proto', 'https');
-                        request.headers.set('x-forwarded-scheme', 'https');
-                    }
-                } catch {
-                    // Ignore parsing errors
-                }
+        // Global rate limit (skip for metrics and health)
+        app.use('*', async (c, next) => {
+            const url = c.req.path;
+            if (url === '/metrics' || url === '/health') {
+                return next();
             }
-        });
 
-        // Request logging hook
-        app.onRequest(async ({ request }) => {
-            const url = new URL(request.url);
-            logger.info(`${request.method} ${url.pathname}`, {
-                method: request.method,
-                path: url.pathname,
-            });
-        });
-
-        // Response logging hook (onAfterResponse)
-        app.onAfterResponse(async ({ request, set }) => {
-            const url = new URL(request.url);
-            const status = set.status || 200;
-            logger.info(`${request.method} ${url.pathname}`, {
-                method: request.method,
-                path: url.pathname,
-                status: status,
-            });
+            const rateLimitResult = checkGlobalRateLimit(c.req.raw);
+            if (!rateLimitResult.allowed) {
+                rateLimitHitsTotal.inc();
+                return c.json(
+                    {
+                        success: false,
+                        message: 'Too many requests, please slow down.',
+                        retryAfter: rateLimitResult.retryAfter,
+                    },
+                    429
+                );
+            }
+            return next();
         });
 
         // Error handler
-        app.onError(({ error, request, set }) => {
-            const url = new URL(request.url);
-            const status = 500;
-            let message = 'Internal Server Error';
+        app.onError(createErrorHandler(logger));
 
-            if (error instanceof Error) {
-                message = error.message;
-                logger.error('Unhandled error', {
-                    error: error.message,
-                    stack: error.stack,
-                    path: url.pathname,
-                    method: request.method,
-                });
-            }
+        // Health check
+        app.get('/health', (c) =>
+            c.json({
+                status: 'healthy',
+                service: 'kivo',
+                timestamp: new Date().toISOString(),
+            })
+        );
 
-            set.status = status;
-            return {
-                success: false,
-                message,
-            };
-        });
-
-        // Health check endpoint
-        app.get('/health', () => ({
-            status: 'healthy',
-            service: 'kivo',
-            timestamp: new Date().toISOString(),
-        }));
-
-        // Prometheus metrics endpoint
-        app.get('/metrics', async ({ set }) => {
-            set.headers['Content-Type'] = metricsRegister.contentType;
-            return await metricsRegister.metrics();
+        // Prometheus metrics
+        app.get('/metrics', async (c) => {
+            c.header('Content-Type', metricsRegister.contentType);
+            return c.body(await metricsRegister.metrics());
         });
 
         // Auth routes
@@ -211,23 +148,23 @@ export const onStartup = async () => {
         app.get('/verify', verify);
         app.post('/logout', logout);
 
-        // Search endpoint (rate limiting handled inside handler)
+        // Search
         app.get('/search', search);
 
         // User management
         app.post('/users', getUsersByUsernames);
 
         // 404 handler
-        app.all('*', ({ set }) => {
-            set.status = 404;
-            return { error: 'Not Found' };
-        });
+        app.all('*', (c) => c.json({ error: 'Not Found' }, 404));
 
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
         const port = config.get('port') as any;
-        app.listen(port, () => {
-            logger.info(`Kivo authentication service running on port ${port}`);
+        Bun.serve({
+            port,
+            fetch: app.fetch,
         });
+
+        logger.info(`Kivo authentication service running on port ${port}`);
     } catch (error: unknown) {
         const logger = dependencyContainer.resolve(DependencyToken.Logger);
 

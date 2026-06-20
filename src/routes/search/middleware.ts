@@ -1,3 +1,4 @@
+import type { Context, Next } from 'hono';
 import { getClientIP } from '../../lib/utils/getClientIP.js';
 
 const searchRateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -21,7 +22,6 @@ export function checkSearchRateLimit(request: Request): { allowed: boolean; retr
     const clientData = searchRateLimit.get(clientIP);
 
     if (!clientData || now > clientData.resetTime) {
-        // New window
         searchRateLimit.set(clientIP, {
             count: 1,
             resetTime: now + windowMs,
@@ -30,39 +30,38 @@ export function checkSearchRateLimit(request: Request): { allowed: boolean; retr
     }
 
     if (clientData.count >= maxRequests) {
-        // Rate limit exceeded
         return {
             allowed: false,
             retryAfter: Math.ceil((clientData.resetTime - now) / 1000),
         };
     }
 
-    // Increment counter
     clientData.count++;
     return { allowed: true };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const searchSecurityMiddleware = async ({ set }: any) => {
-    // Apply security headers
-    set.headers['X-Content-Type-Options'] = 'nosniff';
-    set.headers['X-Frame-Options'] = 'DENY';
-    set.headers['X-XSS-Protection'] = '1; mode=block';
-    set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate';
-    set.headers.Pragma = 'no-cache';
-    set.headers.Expires = '0';
-};
+export async function searchSecurityMiddleware(c: Context, next: Next) {
+    c.header('X-Content-Type-Options', 'nosniff');
+    c.header('X-Frame-Options', 'DENY');
+    c.header('X-XSS-Protection', '1; mode=block');
+    c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    c.header('Pragma', 'no-cache');
+    c.header('Expires', '0');
+    await next();
+}
 
-// biome-ignore lint/suspicious/noExplicitAny: Elysia handler context requires any type
-export const searchRateLimitMiddleware = async ({ request, set }: any) => {
-    const rateLimitResult = checkSearchRateLimit(request);
+export async function searchRateLimitMiddleware(c: Context, next: Next) {
+    const rateLimitResult = checkSearchRateLimit(c.req.raw);
 
     if (!rateLimitResult.allowed) {
-        set.status = 429;
-        return {
-            success: false,
-            message: 'Search rate limit exceeded. Please try again later.',
-            retryAfter: rateLimitResult.retryAfter,
-        };
+        return c.json(
+            {
+                success: false,
+                message: 'Search rate limit exceeded. Please try again later.',
+                retryAfter: rateLimitResult.retryAfter,
+            },
+            429
+        );
     }
-};
+    await next();
+}
