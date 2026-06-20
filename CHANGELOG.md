@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/igor-siergiej/kivo/compare/v1.9.0...v1.9.1) (2026-06-20)
+
+
+### Performance Improvements
+
+* **docker:** copy lockfile, frozen install, drop unused build toolchain ([866ff34](https://github.com/igor-siergiej/kivo/commit/866ff34a92c00dda75f8afd2a71e168c368b46b5))
+
 # [1.9.0](https://github.com/igor-siergiej/kivo/compare/v1.8.1...v1.9.0) (2026-06-20)
 
 
