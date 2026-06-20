@@ -1,11 +1,10 @@
 import { requestLogger } from '@imapps/api-utils/hono';
 import { Hono } from 'hono';
-
-import { createErrorHandler } from './lib/errors/handler.js';
 import { cors } from 'hono/cors';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { initializeDatabase } from './lib/database/init.js';
 import { DependencyToken } from './lib/dependencyContainer/types.js';
+import { createErrorHandler } from './lib/errors/handler.js';
 import {
     httpRequestDurationSeconds,
     httpRequestsTotal,
