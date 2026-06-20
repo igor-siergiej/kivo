@@ -1,3 +1,16 @@
+# [1.9.0](https://github.com/igor-siergiej/kivo/compare/v1.8.1...v1.9.0) (2026-06-20)
+
+
+### Bug Fixes
+
+* sort imports in index.ts to satisfy biome lint ([20e5981](https://github.com/igor-siergiej/kivo/commit/20e5981c572d5f4d70fdb3ec16a5c45dd8a4a791))
+* use local createErrorHandler to keep {success,message} error shape ([16ac145](https://github.com/igor-siergiej/kivo/commit/16ac145381c7a97b2f34e225af691c7ec3d81797))
+
+
+### Features
+
+* **migration:** port kivo from Elysia to Hono 4 ([7668cfb](https://github.com/igor-siergiej/kivo/commit/7668cfbcb35b5877e21afafaae05798f96bb7c9d))
+
 ## [1.8.1](https://github.com/igor-siergiej/kivo/compare/v1.8.0...v1.8.1) (2026-04-23)
 
 
