@@ -15,12 +15,9 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "@elysiajs/cookie": "latest",
-    "@elysiajs/cors": "latest",
-    "@elysiajs/jwt": "latest",
-    "@imapps/api-utils": "0.5.1",
+    "@imapps/api-utils": "0.6.0",
     "bcryptjs": "^3.0.2",
-    "elysia": "latest",
+    "hono": "^4.6.14",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.1",
     "prom-client": "^15.1.3"
@@ -31,7 +28,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/bcryptjs": "^3.0.0",
-    "@types/bun": "latest",
+    "@types/bun": "^1.1.14",
     "@types/jsonwebtoken": "^9.0.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.0",
