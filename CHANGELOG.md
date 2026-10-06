@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/igor-siergiej/kivo/compare/v1.9.1...v1.9.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* rate limit authenticated users per user id instead of per IP ([#4](https://github.com/igor-siergiej/kivo/issues/4)) ([34c6c93](https://github.com/igor-siergiej/kivo/commit/34c6c93015c4c28ccbdb49874ad191f359b9886d))
+
 ## [1.9.1](https://github.com/igor-siergiej/kivo/compare/v1.9.0...v1.9.1) (2026-06-20)
 
 
