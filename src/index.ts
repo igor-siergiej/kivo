@@ -14,7 +14,7 @@ import {
     startDefaultMetrics,
 } from './lib/metrics.js';
 import { processCloudflareHeaders } from './middleware/cloudflare.js';
-import { checkGlobalRateLimit } from './middleware/rateLimit.js';
+import { checkGlobalRateLimit, getVerifiedUserId } from './middleware/rateLimit.js';
 import { applySecurityHeaders } from './middleware/security.js';
 import { login } from './routes/login/index.js';
 import { logout } from './routes/logout/index.js';
@@ -57,6 +57,11 @@ export const onStartup = async () => {
 
         // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
         const corsOriginsList = (config.get('corsAllowedOrigins') as any).split(',').map((o: string) => o.trim());
+
+        const jwtSecret = config.get('jwtSecret');
+        if (typeof jwtSecret !== 'string') {
+            throw new Error('jwtSecret is not configured');
+        }
 
         const app = new Hono();
 
@@ -107,7 +112,8 @@ export const onStartup = async () => {
                 return next();
             }
 
-            const rateLimitResult = checkGlobalRateLimit(c.req.raw);
+            const userId = getVerifiedUserId(c.req.raw, jwtSecret);
+            const rateLimitResult = checkGlobalRateLimit(c.req.raw, userId);
             if (!rateLimitResult.allowed) {
                 rateLimitHitsTotal.inc();
                 return c.json(
