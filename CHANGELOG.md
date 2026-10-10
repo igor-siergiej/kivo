@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/igor-siergiej/kivo/compare/v1.11.0...v1.11.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** align cookie and session lifetimes with REFRESH_TOKEN_EXPIRY ([#25](https://github.com/igor-siergiej/kivo/issues/25)) ([005f00a](https://github.com/igor-siergiej/kivo/commit/005f00a0c18afb1fd55c1c8054122e7316abda50))
+
 # [1.11.0](https://github.com/igor-siergiej/kivo/compare/v1.10.0...v1.11.0) (2026-10-10)
 
 
