@@ -3,6 +3,9 @@ import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { checkSearchRateLimit } from './middleware.js';
 
+// Candidates fetched before ranking; well above the 20 max page size
+const SEARCH_CANDIDATE_LIMIT = 100;
+
 export const search = async (c: Context) => {
     const rateLimitResult = checkSearchRateLimit(c.req.raw);
 
@@ -65,49 +68,21 @@ export const search = async (c: Context) => {
         }
 
         const usersCollection = database.getCollection('users');
-        let results: Array<{ username: string; score?: number }> = [];
+        const escapedQuery = sanitizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-        try {
-            results = await usersCollection
-                .find(
-                    { $text: { $search: sanitizedQuery } },
-                    {
-                        projection: {
-                            username: 1,
-                            _id: 0,
-                            score: { $meta: 'textScore' },
-                        },
-                        limit: parsedLimit,
-                        sort: {
-                            score: { $meta: 'textScore' },
-                            username: 1,
-                        },
-                    }
-                )
-                .toArray();
-        } catch (textSearchError) {
-            logger.warn('Text search failed, falling back to regex', {
-                error: textSearchError,
-            });
-        }
+        // One scan over a small collection: substring matches, with prefix matches ranked first
+        const matches = await usersCollection
+            .find(
+                { username: new RegExp(escapedQuery, 'i') },
+                { projection: { username: 1, _id: 0 }, limit: SEARCH_CANDIDATE_LIMIT, sort: { username: 1 } }
+            )
+            .toArray();
 
-        if (results.length === 0) {
-            const escapedQuery = sanitizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const searchRegex = new RegExp(escapedQuery, 'i');
-
-            const fallbackResults = await usersCollection
-                .find(
-                    { username: searchRegex },
-                    {
-                        projection: { username: 1, _id: 0 },
-                        limit: parsedLimit,
-                        sort: { username: 1 },
-                    }
-                )
-                .toArray();
-
-            results.push(...fallbackResults);
-        }
+        const isPrefix = (username: string) => username.toLowerCase().startsWith(sanitizedQuery);
+        const results = [
+            ...matches.filter((user) => isPrefix(user.username)),
+            ...matches.filter((user) => !isPrefix(user.username)),
+        ].slice(0, parsedLimit);
 
         const usernames = results.map((user) => user.username);
 

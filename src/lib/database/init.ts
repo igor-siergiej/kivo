@@ -20,14 +20,6 @@ export const initializeDatabase = async () => {
             }
         );
 
-        await usersCollection.createIndex(
-            { username: 'text' },
-            {
-                name: 'username_text_search',
-                weights: { username: 1 },
-            }
-        );
-
         const sessionsCollection = database.getCollection('sessions');
 
         // /refresh and /logout look sessions up by token hash; /logout-all and reuse detection by username.

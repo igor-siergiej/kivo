@@ -325,6 +325,21 @@ describe('POST /users', () => {
 });
 
 describe('GET /search', () => {
+    it('returns prefix matches before substring matches and honours the limit', async () => {
+        for (const name of ['malice', 'alice', 'alicia', 'zed']) await seedUser(name);
+
+        const body = await jsonBody(await app.request('/search?q=ALI&limit=2'));
+
+        expect(body.usernames).toEqual(['alice', 'alicia']);
+        expect(body.count).toBe(2);
+    });
+
+    it('treats regex characters in the query literally', async () => {
+        await seedUser('alice');
+
+        expect((await jsonBody(await app.request('/search?q=a.*'))).usernames).toEqual([]);
+    });
+
     it('validates the query and limit before touching the database', async () => {
         expect((await app.request('/search')).status).toBe(400);
         expect((await app.request('/search?q=a')).status).toBe(400);
