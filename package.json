@@ -25,13 +25,13 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@imapps/biome-config": "0.11.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/bun": "^1.4.2",
     "@types/jsonwebtoken": "^9.0.2",
     "husky": "^9.1.7",
     "lint-staged": "17.6.0",
-    "semantic-release": "^24.2.0",
+    "semantic-release": "^25.0.9",
     "typescript": "^7.0.2"
   },
   "lint-staged": {
