@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/igor-siergiej/kivo/compare/v1.12.0...v1.12.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** harden Dockerfile (no token in image, non-root, healthcheck) ([#30](https://github.com/igor-siergiej/kivo/issues/30)) ([c620940](https://github.com/igor-siergiej/kivo/commit/c620940f7c31c42647a90b625378828ac8d37bfe))
+
 # [1.12.0](https://github.com/igor-siergiej/kivo/compare/v1.11.4...v1.12.0) (2026-10-10)
 
 
