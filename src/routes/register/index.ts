@@ -6,7 +6,13 @@ import { hashPassword } from '../../lib/auth/password.js';
 import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
+import {
+    isAcceptablePassword,
+    MAX_PASSWORD_LENGTH,
+    MAX_USERNAME_LENGTH,
+    readJsonObject,
+    stringField,
+} from '../../lib/validation.js';
 
 export const register = async (c: Context) => {
     const body = await readJsonObject(c);
@@ -23,10 +29,10 @@ export const register = async (c: Context) => {
         return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
+    if (!isAcceptablePassword(password)) {
         logger.warn('Registration attempt with weak password', { username });
         registrationsTotal.inc({ outcome: 'weak_password' });
-        return c.json({ success: false, message: 'Password too weak' }, 400);
+        return c.json({ success: false, message: 'Password must be 8-72 bytes and contain a letter and a digit' }, 400);
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);

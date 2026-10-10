@@ -35,6 +35,16 @@ describe('POST /register', () => {
         expect(env.users.docs[0].passwordHash).not.toBe(PASSWORD);
     });
 
+    it('accepts symbols and rejects passwords that are too short, too long or lack a digit or letter', async () => {
+        const register = (password: string, username: string) => postJson(app, '/register', { username, password });
+
+        expect((await register('p@ss w0rd!#', 'symbols')).status).toBe(200);
+        expect((await register('Sh0rt', 'short')).status).toBe(400);
+        expect((await register('NoDigitsHere', 'nodigits')).status).toBe(400);
+        expect((await register('12345678901', 'noletters')).status).toBe(400);
+        expect((await register(`a1${'x'.repeat(71)}`, 'toolong')).status).toBe(400);
+    });
+
     it('treats usernames case-insensitively and survives a duplicate-key race', async () => {
         await seedUser('alice');
 
