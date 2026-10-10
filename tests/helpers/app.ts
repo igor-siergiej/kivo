@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { createErrorHandler } from '../../src/lib/errors/handler';
 import { login } from '../../src/routes/login';
-import { logout } from '../../src/routes/logout';
+import { logout, logoutAll } from '../../src/routes/logout';
 import { refresh } from '../../src/routes/refresh';
 import { register } from '../../src/routes/register';
 import { search } from '../../src/routes/search';
@@ -16,6 +16,7 @@ export const buildApp = () => {
     app.post('/refresh', refresh);
     app.get('/verify', verify);
     app.post('/logout', logout);
+    app.post('/logout-all', logoutAll);
     app.get('/search', search);
     app.post('/users', getUsersByUsernames);
     return app;

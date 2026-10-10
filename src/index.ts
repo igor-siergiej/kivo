@@ -17,7 +17,7 @@ import {
 import { checkGlobalRateLimit, getVerifiedUserId } from './middleware/rateLimit.js';
 import { applySecurityHeaders } from './middleware/security.js';
 import { login } from './routes/login/index.js';
-import { logout } from './routes/logout/index.js';
+import { logout, logoutAll } from './routes/logout/index.js';
 import { refresh } from './routes/refresh/index.js';
 import { register } from './routes/register/index.js';
 import { search } from './routes/search/index.js';
@@ -160,6 +160,7 @@ export const onStartup = async () => {
         app.post('/refresh', refresh);
         app.get('/verify', verify);
         app.post('/logout', logout);
+        app.post('/logout-all', logoutAll);
 
         // Search
         app.get('/search', search);
