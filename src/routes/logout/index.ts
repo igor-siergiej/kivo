@@ -1,13 +1,11 @@
-import crypto from 'node:crypto';
 import type { Context } from 'hono';
-import { deleteCookie, getCookie } from 'hono/cookie';
+import { getCookie } from 'hono/cookie';
 import { dependencyContainer } from '../../dependencies.js';
+import { clearRefreshCookie, hashToken, REFRESH_COOKIE } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
-
 export const logout = async (c: Context) => {
-    const refreshToken = getCookie(c, 'refreshToken');
+    const refreshToken = getCookie(c, REFRESH_COOKIE);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!refreshToken) {
@@ -16,9 +14,6 @@ export const logout = async (c: Context) => {
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
-    const config = dependencyContainer.resolve(DependencyToken.Config);
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
     const sessionsCollection = database.getCollection('sessions');
 
     const tokenHash = hashToken(refreshToken);
@@ -28,12 +23,7 @@ export const logout = async (c: Context) => {
         deletedSessionCount: result.deletedCount,
     });
 
-    deleteCookie(c, 'refreshToken', {
-        httpOnly: true,
-        secure,
-        sameSite,
-        maxAge: 0,
-    });
+    clearRefreshCookie(c);
 
     return c.json({ success: true });
 };

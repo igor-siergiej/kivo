@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import { JsonWebTokenError, verify as jwtVerify, TokenExpiredError } from 'jsonwebtoken';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
@@ -21,7 +22,6 @@ export const verify = async (c: Context) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const { verify: jwtVerify } = await import('jsonwebtoken');
         const payload = jwtVerify(token, config.get('jwtSecret')) as {
             aud?: string;
             username?: string;
@@ -43,8 +43,6 @@ export const verify = async (c: Context) => {
             payload: { id: payload.id, username: payload.username },
         });
     } catch (error) {
-        const { TokenExpiredError, JsonWebTokenError } = await import('jsonwebtoken');
-
         if (error instanceof TokenExpiredError) {
             logger.warn('Token verification failed: token expired');
             return c.json({ success: false, message: 'Token expired' }, 401);
