@@ -17,6 +17,19 @@ describe('kivo @smoke', () => {
     });
 });
 
+describe('kivo metrics', () => {
+    it('serves metrics to internal callers but hides them from Cloudflare-proxied traffic', async () => {
+        const internal = await fetch(`${baseUrl}/metrics`);
+        const proxied = await fetch(`${baseUrl}/metrics`, { headers: { 'cf-connecting-ip': '203.0.113.7' } });
+
+        expect(proxied.status).toBe(404);
+        // Live runs go through Cloudflare, so only assert the internal path locally
+        if (!process.env.E2E_BASE_URL?.startsWith('https://')) {
+            expect(internal.status).toBe(200);
+        }
+    });
+});
+
 describe('kivo readiness', () => {
     it('reports ready when the database answers', async () => {
         const response = await fetch(`${baseUrl}/ready`);

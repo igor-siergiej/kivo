@@ -14,6 +14,7 @@ import {
     rateLimitHitsTotal,
     startDefaultMetrics,
 } from './lib/metrics.js';
+import { internalOnly } from './middleware/internalOnly.js';
 import { requireLookupAuth } from './middleware/lookupAuth.js';
 import { checkGlobalRateLimit, getVerifiedUserId } from './middleware/rateLimit.js';
 import { applySecurityHeaders } from './middleware/security.js';
@@ -145,7 +146,7 @@ export const onStartup = async () => {
         });
 
         // Prometheus metrics
-        app.get('/metrics', async (c) => {
+        app.get('/metrics', internalOnly, async (c) => {
             c.header('Content-Type', metricsRegister.contentType);
             return c.body(await metricsRegister.metrics());
         });
