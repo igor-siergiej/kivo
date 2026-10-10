@@ -1,5 +1,6 @@
 import { requestLogger } from '@imapps/api-utils/hono';
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { initializeDatabase } from './lib/database/init.js';
@@ -22,6 +23,8 @@ import { register } from './routes/register/index.js';
 import { search } from './routes/search/index.js';
 import { getUsersByUsernames } from './routes/users/index.js';
 import { verify } from './routes/verify/index.js';
+
+const MAX_BODY_BYTES = 16 * 1024;
 
 export const onStartup = async () => {
     try {
@@ -72,6 +75,15 @@ export const onStartup = async () => {
                 credentials: true,
                 allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
                 origin: (origin) => (corsOriginsList.includes(origin) ? origin : null),
+            })
+        );
+
+        // Auth payloads are tiny; reject anything larger before parsing
+        app.use(
+            '*',
+            bodyLimit({
+                maxSize: MAX_BODY_BYTES,
+                onError: (c) => c.json({ success: false, message: 'Request body too large' }, 413),
             })
         );
 
