@@ -1,3 +1,10 @@
+## [1.9.14](https://github.com/igor-siergiej/kivo/compare/v1.9.13...v1.9.14) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** equalise login timing and throttle failed logins per account ([#22](https://github.com/igor-siergiej/kivo/issues/22)) ([949a80d](https://github.com/igor-siergiej/kivo/commit/949a80d9d33cd3abfff641f7f39a8544ceafd1b2))
+
 ## [1.9.13](https://github.com/igor-siergiej/kivo/compare/v1.9.12...v1.9.13) (2026-10-10)
 
 
