@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/igor-siergiej/kivo/compare/v1.11.1...v1.11.2) (2026-10-10)
+
+
+### Performance Improvements
+
+* search users with a single prefix-ranked query ([#26](https://github.com/igor-siergiej/kivo/issues/26)) ([c02b1a7](https://github.com/igor-siergiej/kivo/commit/c02b1a74dbb2b6dfa9d9e2caa3faec71c8c62da4))
+
 ## [1.11.1](https://github.com/igor-siergiej/kivo/compare/v1.11.0...v1.11.1) (2026-10-10)
 
 
