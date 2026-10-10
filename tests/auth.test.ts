@@ -223,3 +223,18 @@ describe('request validation', () => {
         ).toBe(400);
     });
 });
+
+describe('error handling', () => {
+    it('hides internal error messages from clients and logs them', async () => {
+        env.users.findOne = async () => {
+            throw new Error('mongo connection string mongodb://secret@host failed');
+        };
+
+        const response = await postJson(app, '/login', { username: 'alice', password: PASSWORD });
+        const body = await jsonBody(response);
+
+        expect(response.status).toBe(500);
+        expect(body.message).toBe('Internal Server Error');
+        expect(JSON.stringify(body)).not.toContain('secret');
+    });
+});

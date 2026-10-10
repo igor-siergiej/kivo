@@ -54,6 +54,15 @@ describe('kivo auth flow', () => {
         expect(loggedOut.status).toBe(200);
     });
 
+    it('rejects oversized bodies with 413', async () => {
+        const response = await fetch(`${baseUrl}/login`, {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify({ username, password: 'a'.repeat(20000) }),
+        });
+        expect(response.status).toBe(413);
+    });
+
     it('rejects a wrong password', async () => {
         const response = await fetch(`${baseUrl}/login`, {
             method: 'POST',
