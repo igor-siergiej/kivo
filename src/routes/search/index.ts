@@ -6,9 +6,6 @@ import { checkSearchRateLimit } from './middleware.js';
 export const search = async (c: Context) => {
     const rateLimitResult = checkSearchRateLimit(c.req.raw);
 
-    c.header('X-Content-Type-Options', 'nosniff');
-    c.header('X-Frame-Options', 'DENY');
-    c.header('X-XSS-Protection', '1; mode=block');
     c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     c.header('Pragma', 'no-cache');
     c.header('Expires', '0');
@@ -119,9 +116,6 @@ export const search = async (c: Context) => {
             resultsCount: usernames.length,
             limit: parsedLimit,
         });
-
-        c.header('Cache-Control', 'public, max-age=30');
-        c.header('X-Query-Time', Date.now().toString());
 
         return c.json({
             success: true,
