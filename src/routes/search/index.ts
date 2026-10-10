@@ -117,7 +117,6 @@ export const search = async (c: Context) => {
             limit: parsedLimit,
         });
 
-
         return c.json({
             success: true,
             usernames,
