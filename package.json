@@ -16,7 +16,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "@imapps/api-utils": "0.6.0",
+    "@imapps/api-utils": "0.11.0",
     "hono": "^4.6.14",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.1",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.5",
-    "@imapps/biome-config": "0.5.1",
+    "@imapps/biome-config": "0.11.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/bun": "^1.1.14",
