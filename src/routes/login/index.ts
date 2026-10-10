@@ -81,5 +81,5 @@ export const login = async (c: Context) => {
 
     setRefreshCookie(c, refreshToken);
 
-    return c.json({ accessToken });
+    return c.json({ success: true, accessToken });
 };

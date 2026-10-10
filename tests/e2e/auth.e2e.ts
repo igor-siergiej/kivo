@@ -30,6 +30,16 @@ describe('kivo metrics', () => {
     });
 });
 
+describe('kivo error envelope', () => {
+    it('answers unknown routes with the standard {success,message} shape', async () => {
+        const response = await fetch(`${baseUrl}/nope`);
+        const body = await jsonBody(response);
+
+        expect(response.status).toBe(404);
+        expect(body).toMatchObject({ success: false, message: 'Not Found' });
+    });
+});
+
 describe('kivo readiness', () => {
     it('reports ready when the database answers', async () => {
         const response = await fetch(`${baseUrl}/ready`);
