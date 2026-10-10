@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/igor-siergiej/kivo/compare/v1.9.14...v1.10.0) (2026-10-10)
+
+
+### Features
+
+* **security:** detect refresh token reuse, add logout-all and session cap ([#23](https://github.com/igor-siergiej/kivo/issues/23)) ([4ac7605](https://github.com/igor-siergiej/kivo/commit/4ac7605139a69298c8b92c4ac6c710b226367077))
+
 ## [1.9.14](https://github.com/igor-siergiej/kivo/compare/v1.9.13...v1.9.14) (2026-10-10)
 
 
