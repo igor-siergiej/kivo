@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
 import type { Context } from 'hono';
 import type { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
+import { hashPassword, isLegacyHash, verifyPassword } from '../../lib/auth/password.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { authAttemptsTotal } from '../../lib/metrics.js';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
@@ -39,11 +39,15 @@ export const login = async (c: Context) => {
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
         logger.warn('Login attempt with invalid password', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'invalid_password' });
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
+    }
+
+    if (isLegacyHash(user.passwordHash)) {
+        await usersCollection.updateOne({ _id: user._id }, { $set: { passwordHash: await hashPassword(password) } });
     }
 
     const { accessToken, refreshToken } = issueTokens({ username, id: user._id?.toString() ?? username });
