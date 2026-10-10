@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/igor-siergiej/kivo/compare/v1.11.3...v1.11.4) (2026-10-10)
+
+
+### Bug Fixes
+
+* bound rate limiter memory and unref cleanup timers ([#28](https://github.com/igor-siergiej/kivo/issues/28)) ([cfdc86a](https://github.com/igor-siergiej/kivo/commit/cfdc86ac9e8b9686330ee1626a8fcb1b45d16d45))
+
 ## [1.11.3](https://github.com/igor-siergiej/kivo/compare/v1.11.2...v1.11.3) (2026-10-10)
 
 
