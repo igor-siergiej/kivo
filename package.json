@@ -38,5 +38,8 @@
     "*.{ts,mts,cts,json}": "biome check --fix --unsafe"
   },
   "module": "src/index.ts",
-  "private": true
+  "private": true,
+  "overrides": {
+    "lodash-es": "4.17.23"
+  }
 }
