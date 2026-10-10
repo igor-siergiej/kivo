@@ -38,10 +38,8 @@ export const onStartup = async () => {
 
         logger.info('Starting Kivo authentication service - connecting to database');
         await database.connect({
-            // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-            connectionUri: config.get('connectionUri') as any,
-            // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-            databaseName: config.get('databaseName') as any,
+            connectionUri: config.get('connectionUri'),
+            databaseName: config.get('databaseName'),
         });
         logger.info('Connected to database');
 
@@ -54,8 +52,10 @@ export const onStartup = async () => {
         });
         logger.info('Database indexes created');
 
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const corsOriginsList = (config.get('corsAllowedOrigins') as any).split(',').map((o: string) => o.trim());
+        const corsOriginsList = config
+            .get('corsAllowedOrigins')
+            .split(',')
+            .map((o: string) => o.trim());
 
         const jwtSecret = config.get('jwtSecret');
         if (typeof jwtSecret !== 'string') {
@@ -158,8 +158,7 @@ export const onStartup = async () => {
         // 404 handler
         app.all('*', (c) => c.json({ error: 'Not Found' }, 404));
 
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const port = config.get('port') as any;
+        const port = config.get('port');
         Bun.serve({
             port,
             fetch: app.fetch,
