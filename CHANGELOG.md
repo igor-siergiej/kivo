@@ -1,3 +1,10 @@
+## [1.9.8](https://github.com/igor-siergiej/kivo/compare/v1.9.7...v1.9.8) (2026-10-10)
+
+
+### Reverts
+
+* Revert "perf: index sessions by tokenHash and username ([#15](https://github.com/igor-siergiej/kivo/issues/15))" ([#16](https://github.com/igor-siergiej/kivo/issues/16)) ([173fe30](https://github.com/igor-siergiej/kivo/commit/173fe30c19b3f6de705968449e2e6c9c00961a80))
+
 ## [1.9.7](https://github.com/igor-siergiej/kivo/compare/v1.9.6...v1.9.7) (2026-10-10)
 
 
