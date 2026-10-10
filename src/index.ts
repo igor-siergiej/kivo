@@ -14,6 +14,7 @@ import {
     rateLimitHitsTotal,
     startDefaultMetrics,
 } from './lib/metrics.js';
+import { requireLookupAuth } from './middleware/lookupAuth.js';
 import { checkGlobalRateLimit, getVerifiedUserId } from './middleware/rateLimit.js';
 import { applySecurityHeaders } from './middleware/security.js';
 import { login } from './routes/login/index.js';
@@ -163,10 +164,10 @@ export const onStartup = async () => {
         app.post('/logout-all', logoutAll);
 
         // Search
-        app.get('/search', search);
+        app.get('/search', requireLookupAuth({ allowServiceToken: false }), search);
 
         // User management
-        app.post('/users', getUsersByUsernames);
+        app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);
 
         // 404 handler
         app.all('*', (c) => c.json({ error: 'Not Found' }, 404));
