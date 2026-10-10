@@ -28,11 +28,9 @@ export const initializeDatabase = async () => {
 
         // /refresh and /logout look sessions up by token hash; /logout-all and reuse detection by username.
         // Not unique: older rows can contain duplicate hashes, and a failed build must not stop startup.
-        for (const key of [{ tokenHash: 1 }, { username: 1 }]) {
-            await sessionsCollection.createIndex(key).catch((error) => {
-                logger.error('Error creating session index', error);
-            });
-        }
+        const logIndexError = (error: unknown) => logger.error('Error creating session index', error);
+        await sessionsCollection.createIndex({ tokenHash: 1 }).catch(logIndexError);
+        await sessionsCollection.createIndex({ username: 1 }).catch(logIndexError);
 
         logger.info('Database indexes created successfully');
     } catch (error) {
