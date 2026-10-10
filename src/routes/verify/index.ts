@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
-import { JsonWebTokenError, verify as jwtVerify, TokenExpiredError } from 'jsonwebtoken';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { dependencyContainer } from '../../dependencies.js';
+import { verifyToken } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 export const verify = async (c: Context) => {
@@ -22,15 +23,11 @@ export const verify = async (c: Context) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const payload = jwtVerify(token, config.get('jwtSecret')) as {
-            aud?: string;
-            username?: string;
-            id?: string;
-        };
+        const payload = verifyToken(token, config.get('jwtSecret'));
 
-        if (payload.aud !== 'kivo') {
-            logger.warn('Token verification failed: invalid audience', {
-                audience: payload.aud,
+        if (payload.tokenType !== 'access') {
+            logger.warn('Token verification failed: not an access token', {
+                tokenType: payload.tokenType,
             });
             return c.json({ success: false, message: 'Invalid or expired token' }, 401);
         }

@@ -74,12 +74,22 @@ describe('GET /verify', () => {
         app.request('/verify', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
 
     it('accepts a valid kivo token and returns its identity', async () => {
-        const token = sign({ id: 'u1', username: 'alice', aud: 'kivo' }, TEST_SECRET, { expiresIn: '5m' });
+        const token = sign({ id: 'u1', username: 'alice', aud: 'kivo', tokenType: 'access' }, TEST_SECRET, {
+            expiresIn: '5m',
+        });
 
         const response = await verifyWith(token);
 
         expect(response.status).toBe(200);
         expect((await jsonBody(response)).payload).toEqual({ id: 'u1', username: 'alice' });
+    });
+
+    it('rejects a refresh token presented as an access token', async () => {
+        const refreshToken = sign({ id: 'u1', username: 'alice', aud: 'kivo', tokenType: 'refresh' }, TEST_SECRET, {
+            expiresIn: '7d',
+        });
+
+        expect((await verifyWith(refreshToken)).status).toBe(401);
     });
 
     it('rejects missing, forged, expired and wrong-audience tokens', async () => {
@@ -110,6 +120,20 @@ describe('POST /refresh and /logout', () => {
         expect((await jsonBody(response)).accessToken).toBeString();
         expect(env.sessions.docs).toHaveLength(1);
         expect(env.sessions.docs[0]._id).not.toBe(original._id);
+    });
+
+    it('rejects an access token used as the refresh cookie and a replayed refresh token', async () => {
+        const cookie = await loginCookie();
+        const accessToken = sign({ sub: 'alice', aud: 'kivo', tokenType: 'access' }, TEST_SECRET, { expiresIn: '5m' });
+
+        const asRefresh = await app.request('/refresh', {
+            method: 'POST',
+            headers: { Cookie: `refreshToken=${accessToken}` },
+        });
+        expect(asRefresh.status).toBe(401);
+
+        expect((await app.request('/refresh', { method: 'POST', headers: { Cookie: cookie } })).status).toBe(200);
+        expect((await app.request('/refresh', { method: 'POST', headers: { Cookie: cookie } })).status).toBe(401);
     });
 
     it('rejects a missing cookie, an unknown session and a forged token', async () => {

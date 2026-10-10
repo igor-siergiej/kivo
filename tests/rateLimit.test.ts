@@ -15,7 +15,7 @@ const requestFrom = (ip: string, token?: string) =>
     });
 
 const accessToken = (id: string, overrides: Record<string, unknown> = {}) =>
-    sign({ id, username: id, aud: 'kivo', ...overrides }, SECRET, { expiresIn: '5m' });
+    sign({ id, username: id, aud: 'kivo', tokenType: 'access', ...overrides }, SECRET, { expiresIn: '5m' });
 
 const exhaust = (ip: string, userId: string | undefined, count: number) => {
     for (let i = 0; i < count; i++) checkGlobalRateLimit(requestFrom(ip), userId);
@@ -27,10 +27,12 @@ describe('getVerifiedUserId', () => {
     });
 
     it('rejects forged, wrong-audience, expired and malformed credentials', () => {
+        const refreshType = accessToken('user-1', { tokenType: 'refresh' });
         const forged = sign({ id: 'user-1', aud: 'kivo' }, 'attacker-secret');
         const wrongAudience = accessToken('user-1', { aud: 'something-else' });
         const expired = sign({ id: 'user-1', aud: 'kivo' }, SECRET, { expiresIn: -10 });
 
+        expect(getVerifiedUserId(requestFrom('1.1.1.1', refreshType), SECRET)).toBeUndefined();
         expect(getVerifiedUserId(requestFrom('1.1.1.1', forged), SECRET)).toBeUndefined();
         expect(getVerifiedUserId(requestFrom('1.1.1.1', wrongAudience), SECRET)).toBeUndefined();
         expect(getVerifiedUserId(requestFrom('1.1.1.1', expired), SECRET)).toBeUndefined();

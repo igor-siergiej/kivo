@@ -42,6 +42,14 @@ describe('kivo auth flow', () => {
         expect((await jsonBody(refreshed)).accessToken).toBeString();
         const rotatedCookie = cookieFrom(refreshed);
 
+        const replayed = await fetch(`${baseUrl}/refresh`, { method: 'POST', headers: { Cookie: refreshCookie } });
+        expect(replayed.status).toBe(401);
+
+        const asAccess = await fetch(`${baseUrl}/verify`, {
+            headers: { Authorization: `Bearer ${refreshCookie.split('=')[1]}` },
+        });
+        expect(asAccess.status).toBe(401);
+
         const loggedOut = await fetch(`${baseUrl}/logout`, { method: 'POST', headers: { Cookie: rotatedCookie } });
         expect(loggedOut.status).toBe(200);
     });

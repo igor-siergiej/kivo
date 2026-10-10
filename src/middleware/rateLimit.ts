@@ -1,4 +1,4 @@
-import { verify } from 'jsonwebtoken';
+import { verifyToken } from '../lib/auth/index.js';
 import { getClientIP } from '../lib/utils/getClientIP.js';
 
 interface RateLimitEntry {
@@ -35,9 +35,8 @@ export function getVerifiedUserId(request: Request, jwtSecret: string): string |
     if (!authHeader?.startsWith('Bearer ')) return undefined;
 
     try {
-        const payload = verify(authHeader.slice('Bearer '.length), jwtSecret);
-        if (typeof payload === 'string') return undefined;
-        return payload.aud === 'kivo' && typeof payload.id === 'string' && payload.id ? payload.id : undefined;
+        const payload = verifyToken(authHeader.slice('Bearer '.length), jwtSecret);
+        return payload.tokenType === 'access' && typeof payload.id === 'string' && payload.id ? payload.id : undefined;
     } catch {
         return undefined;
     }
