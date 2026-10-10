@@ -3,6 +3,7 @@ import type { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
 import { hashPassword, isLegacyHash, verifyPassword } from '../../lib/auth/password.js';
+import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { authAttemptsTotal } from '../../lib/metrics.js';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
@@ -31,7 +32,7 @@ export const login = async (c: Context) => {
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const usersCollection = database.getCollection('users');
 
-    const user = (await usersCollection.findOne({ username })) as IUser | null;
+    const user = (await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION })) as IUser | null;
 
     if (!user) {
         logger.warn('Login attempt with non-existent user', { username });
@@ -50,10 +51,13 @@ export const login = async (c: Context) => {
         await usersCollection.updateOne({ _id: user._id }, { $set: { passwordHash: await hashPassword(password) } });
     }
 
-    const { accessToken, refreshToken } = issueTokens({ username, id: user._id?.toString() ?? username });
+    const { accessToken, refreshToken } = issueTokens({
+        username: user.username,
+        id: user._id?.toString() ?? username,
+    });
 
     noStore(c);
-    await createSession(username, refreshToken);
+    await createSession(user.username, refreshToken);
 
     logger.info('User login successful', { username, userId: user._id });
     authAttemptsTotal.inc({ endpoint: 'login', outcome: 'success' });

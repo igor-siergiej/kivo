@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
 import { hashPassword } from '../../lib/auth/password.js';
+import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
@@ -31,7 +32,7 @@ export const register = async (c: Context) => {
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const usersCollection = database.getCollection('users');
 
-    const existing = await usersCollection.findOne({ username });
+    const existing = await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION });
     if (existing) {
         logger.warn('Registration attempt with existing username', { username });
         registrationsTotal.inc({ outcome: 'username_taken' });
@@ -61,6 +62,13 @@ export const register = async (c: Context) => {
 
         return c.json({ accessToken });
     } catch (error) {
+        // Lost a race with a concurrent registration of the same username (unique index)
+        if ((error as { code?: number }).code === 11000) {
+            logger.warn('Registration attempt with existing username', { username });
+            registrationsTotal.inc({ outcome: 'username_taken' });
+            return c.json({ success: false, message: 'This username is already taken' }, 400);
+        }
+
         logger.error('User registration failed', {
             username,
             error: error instanceof Error ? error.message : String(error),

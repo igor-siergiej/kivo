@@ -1,6 +1,9 @@
 import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../dependencyContainer/types';
 
+/** Matches the unique username index so lookups are case-insensitive. */
+export const USERNAME_COLLATION = { locale: 'en', strength: 2 } as const;
+
 export const initializeDatabase = async () => {
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
@@ -12,7 +15,7 @@ export const initializeDatabase = async () => {
             { username: 1 },
             {
                 unique: true,
-                collation: { locale: 'en', strength: 2 },
+                collation: USERNAME_COLLATION,
             }
         );
 
