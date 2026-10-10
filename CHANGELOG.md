@@ -1,3 +1,10 @@
+## [1.9.4](https://github.com/igor-siergiej/kivo/compare/v1.9.3...v1.9.4) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** stop trusting client-controlled forwarded IP ([#12](https://github.com/igor-siergiej/kivo/issues/12)) ([171d166](https://github.com/igor-siergiej/kivo/commit/171d166c8b0970a27a636014a024ce6004eb584c))
+
 ## [1.9.3](https://github.com/igor-siergiej/kivo/compare/v1.9.2...v1.9.3) (2026-10-10)
 
 
