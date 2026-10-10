@@ -13,7 +13,6 @@ import {
     rateLimitHitsTotal,
     startDefaultMetrics,
 } from './lib/metrics.js';
-import { processCloudflareHeaders } from './middleware/cloudflare.js';
 import { checkGlobalRateLimit, getVerifiedUserId } from './middleware/rateLimit.js';
 import { applySecurityHeaders } from './middleware/security.js';
 import { login } from './routes/login/index.js';
@@ -78,9 +77,6 @@ export const onStartup = async () => {
 
         // Request logger
         app.use('*', requestLogger(logger));
-
-        // Cloudflare header processing
-        app.use('*', processCloudflareHeaders);
 
         // Security headers
         app.use('*', applySecurityHeaders);

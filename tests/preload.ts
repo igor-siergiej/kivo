@@ -9,7 +9,6 @@ const defaults: Record<string, string> = {
     SECURE: 'false',
     SAME_SITE: 'Lax',
     CORS_ALLOWED_ORIGINS: 'http://localhost:3000',
-    CORS_ALLOW_NO_ORIGIN: 'true',
 };
 
 for (const [key, value] of Object.entries(defaults)) {

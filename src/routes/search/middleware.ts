@@ -1,4 +1,3 @@
-import type { Context, Next } from 'hono';
 import { getClientIP } from '../../lib/utils/getClientIP.js';
 
 const searchRateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -38,30 +37,4 @@ export function checkSearchRateLimit(request: Request): { allowed: boolean; retr
 
     clientData.count++;
     return { allowed: true };
-}
-
-export async function searchSecurityMiddleware(c: Context, next: Next) {
-    c.header('X-Content-Type-Options', 'nosniff');
-    c.header('X-Frame-Options', 'DENY');
-    c.header('X-XSS-Protection', '1; mode=block');
-    c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    c.header('Pragma', 'no-cache');
-    c.header('Expires', '0');
-    await next();
-}
-
-export async function searchRateLimitMiddleware(c: Context, next: Next) {
-    const rateLimitResult = checkSearchRateLimit(c.req.raw);
-
-    if (!rateLimitResult.allowed) {
-        return c.json(
-            {
-                success: false,
-                message: 'Search rate limit exceeded. Please try again later.',
-                retryAfter: rateLimitResult.retryAfter,
-            },
-            429
-        );
-    }
-    await next();
 }
