@@ -7,3 +7,11 @@ export const hashPassword = (password: string) => Bun.password.hash(password, AR
 export const verifyPassword = (password: string, hash: string) => Bun.password.verify(password, hash);
 
 export const isLegacyHash = (hash: string) => hash.startsWith('$2');
+
+let dummyHash: Promise<string> | undefined;
+
+/** Burns the same hashing time as a real check so unknown usernames are not distinguishable by latency. */
+export const verifyAgainstDummy = async (password: string) => {
+    dummyHash ??= hashPassword('kivo-timing-equalisation');
+    await verifyPassword(password, await dummyHash);
+};

@@ -113,6 +113,31 @@ describe('POST /login', () => {
     });
 });
 
+describe('login throttling', () => {
+    it('locks an account after repeated failures, then recovers on success of another account', async () => {
+        await seedUser('victim');
+        await seedUser('other');
+        const attempt = (username: string, password: string) => postJson(app, '/login', { username, password });
+
+        for (let i = 0; i < 5; i++) {
+            expect((await attempt('victim', 'WrongPassw0rd1')).status).toBe(401);
+        }
+
+        const locked = await attempt('VICTIM', PASSWORD);
+        expect(locked.status).toBe(429);
+        expect(Number(locked.headers.get('retry-after'))).toBeGreaterThan(0);
+        expect((await attempt('other', PASSWORD)).status).toBe(200);
+    });
+
+    it('counts failures for unknown usernames too, so existence is not revealed by lockout', async () => {
+        for (let i = 0; i < 5; i++) {
+            await postJson(app, '/login', { username: 'ghost', password: PASSWORD });
+        }
+
+        expect((await postJson(app, '/login', { username: 'ghost', password: PASSWORD })).status).toBe(429);
+    });
+});
+
 describe('GET /verify', () => {
     const verifyWith = (token?: string) =>
         app.request('/verify', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
