@@ -40,6 +40,15 @@ describe('kivo error envelope', () => {
     });
 });
 
+describe('kivo jwks', () => {
+    it('serves a JWKS document', async () => {
+        const response = await fetch(`${baseUrl}/.well-known/jwks.json`);
+
+        expect(response.status).toBe(200);
+        expect((await jsonBody(response)).keys).toBeArray();
+    });
+});
+
 describe('kivo readiness', () => {
     it('reports ready when the database answers', async () => {
         const response = await fetch(`${baseUrl}/ready`);

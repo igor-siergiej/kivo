@@ -1,11 +1,12 @@
 import crypto from 'node:crypto';
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { type JwtPayload, sign, verify } from 'jsonwebtoken';
+import { decode, JsonWebTokenError, type JwtPayload, type SignOptions, sign, verify } from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../dependencyContainer/types.js';
 import { durationToSeconds } from '../utils/duration.js';
+import { getSigningKeys } from './keys.js';
 
 const LEGACY_REFRESH_COOKIE = 'refreshToken';
 
@@ -19,16 +20,21 @@ export const hashToken = (token: string) => crypto.createHash('sha256').update(t
 export const issueTokens = (user: { username: string; id: string }) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const payload = { sub: user.username, username: user.username, id: user.id, aud: 'kivo' };
-    const secret = config.get('jwtSecret');
-    const options = { algorithm: ALGORITHM, issuer: ISSUER } as const;
+    const asymmetric = getSigningKeys();
+    const signingKey = asymmetric?.privateKey ?? config.get('jwtSecret');
+    const options: SignOptions = {
+        algorithm: asymmetric ? 'ES256' : ALGORITHM,
+        issuer: ISSUER,
+        ...(asymmetric ? { keyid: asymmetric.kid } : {}),
+    };
 
     return {
-        accessToken: sign({ ...payload, tokenType: 'access' }, secret, {
+        accessToken: sign({ ...payload, tokenType: 'access' }, signingKey, {
             ...options,
             expiresIn: config.get('accessTokenExpiry'),
         }),
         // jti keeps rotated refresh tokens unique even when issued within the same second
-        refreshToken: sign({ ...payload, tokenType: 'refresh' }, secret, {
+        refreshToken: sign({ ...payload, tokenType: 'refresh' }, signingKey, {
             ...options,
             expiresIn: config.get('refreshTokenExpiry'),
             jwtid: crypto.randomUUID(),
@@ -36,9 +42,23 @@ export const issueTokens = (user: { username: string; id: string }) => {
     };
 };
 
-/** Verifies signature, expiry and audience. Throws jsonwebtoken errors on failure. */
+/**
+ * Verifies signature, expiry and audience. Throws jsonwebtoken errors on failure.
+ * ES256 tokens verify against the public key, HS256 (legacy / key not configured) against the shared secret;
+ * the algorithm list is fixed per key type so a token cannot pick its own verification method.
+ */
 export const verifyToken = (token: string, secret: string): JwtPayload & { tokenType?: TokenType } => {
-    const payload = verify(token, secret, { algorithms: [ALGORITHM], audience: 'kivo' });
+    const alg = decode(token, { complete: true })?.header.alg;
+    let payload: string | JwtPayload;
+
+    if (alg === 'ES256') {
+        const keys = getSigningKeys();
+        if (!keys) throw new JsonWebTokenError('asymmetric tokens are not accepted');
+        payload = verify(token, keys.publicKey, { algorithms: ['ES256'], audience: 'kivo' });
+    } else {
+        payload = verify(token, secret, { algorithms: [ALGORITHM], audience: 'kivo' });
+    }
+
     if (typeof payload === 'string') {
         throw new Error('Unexpected string token payload');
     }
