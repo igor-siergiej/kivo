@@ -1,3 +1,10 @@
+## [1.9.6](https://github.com/igor-siergiej/kivo/compare/v1.9.5...v1.9.6) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** stop leaking error messages, cap request body size ([#14](https://github.com/igor-siergiej/kivo/issues/14)) ([069bae3](https://github.com/igor-siergiej/kivo/commit/069bae36d7b524874a9aeb2faf214d4c7159f3ca))
+
 ## [1.9.5](https://github.com/igor-siergiej/kivo/compare/v1.9.4...v1.9.5) (2026-10-10)
 
 
