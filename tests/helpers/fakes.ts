@@ -9,6 +9,9 @@ const matches = (doc: Doc, filter: Doc, ignoreCase = false) =>
         if (ignoreCase && typeof expected === 'string' && typeof doc[key] === 'string') {
             return (doc[key] as string).toLowerCase() === expected.toLowerCase();
         }
+        if (expected instanceof RegExp) {
+            return typeof doc[key] === 'string' && expected.test(doc[key] as string);
+        }
         if (expected && typeof expected === 'object' && '$exists' in expected) {
             return (doc[key] !== undefined) === (expected as { $exists: boolean }).$exists;
         }
