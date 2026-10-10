@@ -22,8 +22,7 @@ export const verify = async (c: Context) => {
 
     try {
         const { verify: jwtVerify } = await import('jsonwebtoken');
-        // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-        const payload = jwtVerify(token, config.get('jwtSecret') as any) as {
+        const payload = jwtVerify(token, config.get('jwtSecret')) as {
             aud?: string;
             username?: string;
             id?: string;

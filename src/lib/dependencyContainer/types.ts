@@ -1,4 +1,5 @@
-import type { ConfigService, Logger, MongoDbConnection } from '@imapps/api-utils';
+import type { Logger, MongoDbConnection } from '@imapps/api-utils';
+import type { AppConfig } from '../config';
 import type { Session, User } from '../database/types';
 
 // Collection type mapping for MongoDB
@@ -16,6 +17,5 @@ export enum DependencyToken {
 export type Dependencies = {
     [DependencyToken.Database]: MongoDbConnection<Collections>;
     [DependencyToken.Logger]: Logger;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService requires generic type parameter for schema
-    [DependencyToken.Config]: ConfigService<any>;
+    [DependencyToken.Config]: AppConfig;
 };

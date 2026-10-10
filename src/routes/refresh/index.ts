@@ -11,16 +11,11 @@ export const refresh = async (c: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const jwtSecret = config.get('jwtSecret') as any;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const accessTokenExpiry = config.get('accessTokenExpiry') as any;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const refreshTokenExpiry = config.get('refreshTokenExpiry') as any;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const secure = config.get('secure') as any;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const sameSite = config.get('sameSite') as any;
+    const jwtSecret = config.get('jwtSecret');
+    const accessTokenExpiry = config.get('accessTokenExpiry');
+    const refreshTokenExpiry = config.get('refreshTokenExpiry');
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
 
     const refreshToken = getCookie(c, 'refreshToken');
 

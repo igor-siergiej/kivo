@@ -17,10 +17,8 @@ export const logout = async (c: Context) => {
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const config = dependencyContainer.resolve(DependencyToken.Config);
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const secure = config.get('secure') as any;
-    // biome-ignore lint/suspicious/noExplicitAny: ConfigService get() returns unknown
-    const sameSite = config.get('sameSite') as any;
+    const secure = config.get('secure');
+    const sameSite = config.get('sameSite');
     const sessionsCollection = database.getCollection('sessions');
 
     const tokenHash = hashToken(refreshToken);
