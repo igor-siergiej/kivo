@@ -1,3 +1,10 @@
+## [1.9.9](https://github.com/igor-siergiej/kivo/compare/v1.9.8...v1.9.9) (2026-10-10)
+
+
+### Performance Improvements
+
+* index sessions by tokenHash and username (non-unique) ([#17](https://github.com/igor-siergiej/kivo/issues/17)) ([ec1657f](https://github.com/igor-siergiej/kivo/commit/ec1657fef83aab4f7f3be0754d62b445f68de979))
+
 ## [1.9.8](https://github.com/igor-siergiej/kivo/compare/v1.9.7...v1.9.8) (2026-10-10)
 
 
