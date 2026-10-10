@@ -185,3 +185,41 @@ describe('GET /search', () => {
         expect((await app.request('/search?q=alice&limit=99')).status).toBe(400);
     });
 });
+
+describe('request validation', () => {
+    it('rejects operator objects and non-string credentials without querying the database', async () => {
+        await seedUser();
+
+        const operator = await postJson(app, '/login', { username: { $ne: null }, password: PASSWORD });
+        const numeric = await postJson(app, '/register', { username: 123, password: PASSWORD });
+        const listPassword = await postJson(app, '/login', { username: 'alice', password: [PASSWORD] });
+
+        expect(operator.status).toBe(400);
+        expect(numeric.status).toBe(400);
+        expect(listPassword.status).toBe(400);
+        expect(env.users.docs).toHaveLength(1);
+    });
+
+    it('rejects oversized credentials', async () => {
+        expect((await postJson(app, '/login', { username: 'a'.repeat(65), password: PASSWORD })).status).toBe(400);
+        expect((await postJson(app, '/login', { username: 'alice', password: 'a'.repeat(1025) })).status).toBe(400);
+    });
+
+    it('returns 400 for malformed or non-object JSON bodies', async () => {
+        const malformed = await app.request('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{not json',
+        });
+
+        expect(malformed.status).toBe(400);
+        expect((await postJson(app, '/login', ['alice'])).status).toBe(400);
+    });
+
+    it('rejects /users payloads containing non-strings or too many names', async () => {
+        expect((await postJson(app, '/users', { usernames: ['alice', { $ne: null }] })).status).toBe(400);
+        expect(
+            (await postJson(app, '/users', { usernames: Array.from({ length: 101 }, (_, i) => `u${i}`) })).status
+        ).toBe(400);
+    });
+});
