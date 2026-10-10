@@ -35,6 +35,18 @@ describe('POST /register', () => {
         expect(env.users.docs[0].passwordHash).not.toBe(PASSWORD);
     });
 
+    it('treats usernames case-insensitively and survives a duplicate-key race', async () => {
+        await seedUser('alice');
+
+        const differentCase = await postJson(app, '/register', { username: 'ALICE', password: PASSWORD });
+        expect(differentCase.status).toBe(400);
+
+        env.users.findOne = async () => null;
+        const raced = await postJson(app, '/register', { username: 'Alice', password: PASSWORD });
+        expect(raced.status).toBe(400);
+        expect((await jsonBody(raced)).message).toBe('This username is already taken');
+    });
+
     it('rejects missing credentials, weak passwords and taken usernames', async () => {
         await seedUser();
 
@@ -75,6 +87,15 @@ describe('POST /login', () => {
         expect(unknown.status).toBe(401);
         expect(wrong.status).toBe(401);
         expect(await jsonBody(unknown)).toEqual(await jsonBody(wrong));
+    });
+
+    it('logs in regardless of username case and issues the stored username', async () => {
+        await seedUser('Alice');
+
+        const response = await postJson(app, '/login', { username: 'aLiCe', password: PASSWORD });
+
+        expect(response.status).toBe(200);
+        expect(env.sessions.docs[0].username).toBe('Alice');
     });
 
     it('requires username and password', async () => {

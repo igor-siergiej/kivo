@@ -4,8 +4,11 @@ import { DependencyToken } from '../../src/lib/dependencyContainer/types';
 
 type Doc = Record<string, unknown>;
 
-const matches = (doc: Doc, filter: Doc) =>
+const matches = (doc: Doc, filter: Doc, ignoreCase = false) =>
     Object.entries(filter).every(([key, expected]) => {
+        if (ignoreCase && typeof expected === 'string' && typeof doc[key] === 'string') {
+            return (doc[key] as string).toLowerCase() === expected.toLowerCase();
+        }
         if (expected && typeof expected === 'object' && '$in' in expected) {
             return (expected as { $in: unknown[] }).$in.includes(doc[key]);
         }
@@ -15,9 +18,15 @@ const matches = (doc: Doc, filter: Doc) =>
 export class FakeCollection {
     docs: Doc[] = [];
 
-    findOne = async (filter: Doc) => this.docs.find((doc) => matches(doc, filter)) ?? null;
+    constructor(private readonly uniqueUsername = false) {}
+
+    findOne = async (filter: Doc, options: { collation?: unknown } = {}) =>
+        this.docs.find((doc) => matches(doc, filter, Boolean(options.collation))) ?? null;
 
     insertOne = async (doc: Doc) => {
+        if (this.uniqueUsername && this.docs.some((existing) => matches(existing, { username: doc.username }, true))) {
+            throw Object.assign(new Error('E11000 duplicate key'), { code: 11000 });
+        }
         this.docs.push(doc);
         return { insertedId: doc._id };
     };
@@ -51,7 +60,7 @@ export interface TestEnvironment {
 
 /** Replaces the container's Database, Logger and Config with in-memory fakes. */
 export const installFakes = (overrides: Doc = {}): TestEnvironment => {
-    const users = new FakeCollection();
+    const users = new FakeCollection(true);
     const sessions = new FakeCollection();
     const logs: string[] = [];
     const collections: Record<string, FakeCollection> = { users, sessions };

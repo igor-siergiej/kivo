@@ -11,6 +11,7 @@ import {
     setRefreshCookie,
     verifyToken,
 } from '../../lib/auth/index.js';
+import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 export const refresh = async (c: Context) => {
@@ -53,7 +54,7 @@ export const refresh = async (c: Context) => {
         }
 
         const usersCollection = database.getCollection('users');
-        const user = await usersCollection.findOne({ username });
+        const user = await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION });
 
         if (!user) {
             logger.warn('Token refresh failed: user not found', { username });
