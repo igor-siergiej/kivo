@@ -1,7 +1,16 @@
 import { ConfigService as BaseConfigService, parsers } from '@imapps/api-utils';
 import type { SignOptions } from 'jsonwebtoken';
+import { durationToSeconds } from '../utils/duration';
 
-const duration = (value: string) => value as SignOptions['expiresIn'];
+const duration = (value: string) => {
+    durationToSeconds(value);
+    return value as SignOptions['expiresIn'];
+};
+
+const jwtSecret = (value: string) => {
+    if (value.length < 32) throw new Error('JWT_SECRET must be at least 32 characters');
+    return value;
+};
 
 const sameSite = (value: string) => {
     const normalized = value.toLowerCase();
@@ -15,7 +24,7 @@ const schema = {
     port: { parser: parsers.number, from: 'PORT' },
     connectionUri: { parser: parsers.string, from: 'CONNECTION_URI' },
     databaseName: { parser: parsers.string, from: 'DATABASE_NAME' },
-    jwtSecret: { parser: parsers.string, from: 'JWT_SECRET' },
+    jwtSecret: { parser: jwtSecret, from: 'JWT_SECRET' },
     accessTokenExpiry: { parser: duration, from: 'ACCESS_TOKEN_EXPIRY' },
     refreshTokenExpiry: { parser: duration, from: 'REFRESH_TOKEN_EXPIRY' },
     secure: { parser: parsers.boolean, from: 'SECURE' },

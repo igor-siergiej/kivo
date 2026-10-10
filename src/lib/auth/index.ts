@@ -1,13 +1,13 @@
 import crypto from 'node:crypto';
 import type { Context } from 'hono';
-import { deleteCookie, setCookie } from 'hono/cookie';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { type JwtPayload, sign, verify } from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../dependencyContainer/types.js';
+import { durationToSeconds } from '../utils/duration.js';
 
-export const REFRESH_COOKIE = 'refreshToken';
-const COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+const LEGACY_REFRESH_COOKIE = 'refreshToken';
 
 export type TokenType = 'access' | 'refresh';
 
@@ -75,10 +75,31 @@ const cookieOptions = () => {
     return { httpOnly: true, secure: config.get('secure'), sameSite: config.get('sameSite') } as const;
 };
 
-export const setRefreshCookie = (c: Context, refreshToken: string) =>
-    setCookie(c, REFRESH_COOKIE, refreshToken, { ...cookieOptions(), maxAge: COOKIE_MAX_AGE_SECONDS });
+// __Host- pins the cookie to this host over HTTPS; browsers reject it without Secure, so only use it when secure
+const refreshCookieName = () =>
+    dependencyContainer.resolve(DependencyToken.Config).get('secure')
+        ? `__Host-${LEGACY_REFRESH_COOKIE}`
+        : LEGACY_REFRESH_COOKIE;
 
-export const clearRefreshCookie = (c: Context) => deleteCookie(c, REFRESH_COOKIE, { ...cookieOptions(), maxAge: 0 });
+/** Reads the current cookie, falling back to the pre-prefix name so existing sessions survive the rename. */
+export const getRefreshCookie = (c: Context) =>
+    getCookie(c, refreshCookieName()) ?? getCookie(c, LEGACY_REFRESH_COOKIE);
+
+export const setRefreshCookie = (c: Context, refreshToken: string) => {
+    const config = dependencyContainer.resolve(DependencyToken.Config);
+    setCookie(c, refreshCookieName(), refreshToken, {
+        ...cookieOptions(),
+        path: '/',
+        maxAge: durationToSeconds(config.get('refreshTokenExpiry') as string),
+    });
+};
+
+export const clearRefreshCookie = (c: Context) => {
+    deleteCookie(c, refreshCookieName(), { ...cookieOptions(), path: '/', maxAge: 0 });
+    if (refreshCookieName() !== LEGACY_REFRESH_COOKIE) {
+        deleteCookie(c, LEGACY_REFRESH_COOKIE, { ...cookieOptions(), maxAge: 0 });
+    }
+};
 
 export const noStore = (c: Context) => {
     c.header('Cache-Control', 'no-store');

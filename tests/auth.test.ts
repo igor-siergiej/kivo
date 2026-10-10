@@ -66,6 +66,34 @@ describe('POST /register', () => {
     });
 });
 
+describe('refresh cookie', () => {
+    it('lives as long as the refresh token', async () => {
+        await seedUser();
+        const response = await postJson(app, '/login', { username: 'alice', password: PASSWORD });
+
+        expect(response.headers.get('set-cookie')).toContain('Max-Age=604800');
+    });
+
+    it('uses the __Host- prefix over HTTPS and still reads the legacy cookie name', async () => {
+        env = installFakes({ secure: true });
+        app = buildApp();
+        await seedUser();
+
+        const loggedIn = await postJson(app, '/login', { username: 'alice', password: PASSWORD });
+        const cookie = loggedIn.headers.get('set-cookie') ?? '';
+        expect(cookie).toStartWith('__Host-refreshToken=');
+        expect(cookie).toContain('Path=/');
+        expect(cookie).not.toContain('Domain');
+
+        const token = cookie.split(';')[0].split('=')[1];
+        const viaLegacyName = await app.request('/refresh', {
+            method: 'POST',
+            headers: { Cookie: `refreshToken=${token}` },
+        });
+        expect(viaLegacyName.status).toBe(200);
+    });
+});
+
 describe('POST /login', () => {
     it('issues tokens and stores a hashed session for valid credentials', async () => {
         await seedUser();

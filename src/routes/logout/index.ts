@@ -1,11 +1,10 @@
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { dependencyContainer } from '../../dependencies.js';
-import { clearRefreshCookie, hashToken, REFRESH_COOKIE } from '../../lib/auth/index.js';
+import { clearRefreshCookie, getRefreshCookie, hashToken } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
 export const logout = async (c: Context) => {
-    const refreshToken = getCookie(c, REFRESH_COOKIE);
+    const refreshToken = getRefreshCookie(c);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!refreshToken) {
@@ -30,7 +29,7 @@ export const logout = async (c: Context) => {
 
 /** Revokes every session of the user that owns the presented refresh token. */
 export const logoutAll = async (c: Context) => {
-    const refreshToken = getCookie(c, REFRESH_COOKIE);
+    const refreshToken = getRefreshCookie(c);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!refreshToken) {

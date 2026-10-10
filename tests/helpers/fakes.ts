@@ -59,7 +59,7 @@ export class FakeCollection {
     };
 }
 
-export const TEST_SECRET = 'test-secret-test-secret';
+export const TEST_SECRET = 'test-secret-test-secret-test-secret-01';
 
 export interface TestEnvironment {
     users: FakeCollection;
