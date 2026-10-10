@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/igor-siergiej/kivo/compare/v1.12.3...v1.13.0) (2026-10-10)
+
+
+### Features
+
+* **security:** optional ES256 signing with a JWKS endpoint ([#45](https://github.com/igor-siergiej/kivo/issues/45)) ([112b27e](https://github.com/igor-siergiej/kivo/commit/112b27e5add9d0779aabe1cea9912810ba556c9d))
+
 ## [1.12.3](https://github.com/igor-siergiej/kivo/compare/v1.12.2...v1.12.3) (2026-10-10)
 
 
