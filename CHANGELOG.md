@@ -1,3 +1,10 @@
+## [1.9.13](https://github.com/igor-siergiej/kivo/compare/v1.9.12...v1.9.13) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** use hono secure-headers, keep search responses uncached ([#21](https://github.com/igor-siergiej/kivo/issues/21)) ([5faca0f](https://github.com/igor-siergiej/kivo/commit/5faca0fa7b09c9af350807e2bc31784e6113705a))
+
 ## [1.9.12](https://github.com/igor-siergiej/kivo/compare/v1.9.11...v1.9.12) (2026-10-10)
 
 
