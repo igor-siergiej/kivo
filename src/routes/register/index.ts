@@ -5,10 +5,12 @@ import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
+import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
 
 export const register = async (c: Context) => {
-    const body = await c.req.json<{ username?: string; password?: string }>();
-    const { username, password } = body;
+    const body = await readJsonObject(c);
+    const username = stringField(body, 'username', MAX_USERNAME_LENGTH);
+    const password = stringField(body, 'password', MAX_PASSWORD_LENGTH);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {

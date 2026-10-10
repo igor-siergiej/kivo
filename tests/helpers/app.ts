@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { createErrorHandler } from '../../src/lib/errors/handler';
 import { login } from '../../src/routes/login';
 import { logout } from '../../src/routes/logout';
 import { refresh } from '../../src/routes/refresh';
@@ -9,6 +10,7 @@ import { verify } from '../../src/routes/verify';
 
 export const buildApp = () => {
     const app = new Hono();
+    app.onError(createErrorHandler({ error: () => {} } as never));
     app.post('/login', login);
     app.post('/register', register);
     app.post('/refresh', refresh);

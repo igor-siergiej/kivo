@@ -1,17 +1,25 @@
 import type { Context } from 'hono';
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
+import { MAX_USERNAME_LENGTH, MAX_USERNAMES_PER_REQUEST, readJsonObject } from '../../lib/validation.js';
 
 export const getUsersByUsernames = async (c: Context) => {
-    const body = await c.req.json<{ usernames?: Array<string> }>();
+    const body = await readJsonObject(c);
     const { usernames } = body;
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-    if (!usernames || !Array.isArray(usernames)) {
+    if (
+        !Array.isArray(usernames) ||
+        usernames.length > MAX_USERNAMES_PER_REQUEST ||
+        !usernames.every((name) => typeof name === 'string' && name.length <= MAX_USERNAME_LENGTH)
+    ) {
         logger.warn('Get users request with invalid usernames format', {
             receivedType: Array.isArray(usernames) ? 'array' : typeof usernames,
         });
-        return c.json({ success: false, message: 'usernames array is required' }, 400);
+        return c.json(
+            { success: false, message: `usernames must be an array of up to ${MAX_USERNAMES_PER_REQUEST} strings` },
+            400
+        );
     }
 
     if (usernames.length === 0) {
