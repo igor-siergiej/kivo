@@ -2,11 +2,12 @@ import type { Context } from 'hono';
 import type { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
-import { hashPassword, isLegacyHash, verifyPassword } from '../../lib/auth/password.js';
+import { hashPassword, isLegacyHash, verifyAgainstDummy, verifyPassword } from '../../lib/auth/password.js';
 import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { authAttemptsTotal } from '../../lib/metrics.js';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
+import { clearFailedLogins, getLoginLockout, recordFailedLogin } from '../../middleware/loginThrottle.js';
 
 interface IUser {
     _id?: ObjectId;
@@ -29,12 +30,25 @@ export const login = async (c: Context) => {
         return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
+    const lockedFor = getLoginLockout(username);
+    if (lockedFor !== undefined) {
+        logger.warn('Login attempt on locked account', { username });
+        authAttemptsTotal.inc({ endpoint: 'login', outcome: 'locked' });
+        c.header('Retry-After', String(lockedFor));
+        return c.json(
+            { success: false, message: 'Too many failed attempts, try again later', retryAfter: lockedFor },
+            429
+        );
+    }
+
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const usersCollection = database.getCollection('users');
 
     const user = (await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION })) as IUser | null;
 
     if (!user) {
+        await verifyAgainstDummy(password);
+        recordFailedLogin(username);
         logger.warn('Login attempt with non-existent user', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'unknown_user' });
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
@@ -42,10 +56,13 @@ export const login = async (c: Context) => {
 
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
+        recordFailedLogin(username);
         logger.warn('Login attempt with invalid password', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'invalid_password' });
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
+
+    clearFailedLogins(username);
 
     if (isLegacyHash(user.passwordHash)) {
         await usersCollection.updateOne({ _id: user._id }, { $set: { passwordHash: await hashPassword(password) } });
