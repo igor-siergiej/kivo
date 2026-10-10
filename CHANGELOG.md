@@ -1,3 +1,10 @@
+## [1.12.3](https://github.com/igor-siergiej/kivo/compare/v1.12.2...v1.12.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* **ci:** pin lodash/lodash-es to 4.17.23 for semantic-release ([#43](https://github.com/igor-siergiej/kivo/issues/43)) ([4f16177](https://github.com/igor-siergiej/kivo/commit/4f161772340bcfdec85a8165006bf8dd937c0789))
+
 ## [1.12.2](https://github.com/igor-siergiej/kivo/compare/v1.12.1...v1.12.2) (2026-10-10)
 
 
