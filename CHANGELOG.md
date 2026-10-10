@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/igor-siergiej/kivo/compare/v1.11.2...v1.11.3) (2026-10-10)
+
+
+### Performance Improvements
+
+* simplify request timing middleware ([#27](https://github.com/igor-siergiej/kivo/issues/27)) ([59ac724](https://github.com/igor-siergiej/kivo/commit/59ac7240067507376271bde53ac1a5028ccc254d))
+
 ## [1.11.2](https://github.com/igor-siergiej/kivo/compare/v1.11.1...v1.11.2) (2026-10-10)
 
 
