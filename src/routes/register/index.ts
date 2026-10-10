@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
 import type { Context } from 'hono';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
+import { hashPassword } from '../../lib/auth/password.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
 import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
@@ -39,8 +39,7 @@ export const register = async (c: Context) => {
     }
 
     try {
-        const saltRounds = 14;
-        const passwordHash = await bcrypt.hash(password, saltRounds);
+        const passwordHash = await hashPassword(password);
         const result = await usersCollection.insertOne({
             _id: new ObjectId(),
             username,

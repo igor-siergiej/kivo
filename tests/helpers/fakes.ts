@@ -28,6 +28,12 @@ export class FakeCollection {
         return { deletedCount: index >= 0 ? 1 : 0 };
     };
 
+    updateOne = async (filter: Doc, update: { $set: Doc }) => {
+        const doc = this.docs.find((candidate) => matches(candidate, filter));
+        if (doc) Object.assign(doc, update.$set);
+        return { modifiedCount: doc ? 1 : 0 };
+    };
+
     find = (filter: Doc) => {
         const found = this.docs.filter((doc) => matches(doc, filter));
         const cursor = { project: () => cursor, toArray: async () => found };

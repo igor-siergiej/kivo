@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import bcrypt from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { buildApp, jsonBody, postJson, refreshCookie } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
@@ -16,7 +15,11 @@ beforeEach(() => {
 
 const seedUser = async (username = 'alice') => {
     const _id = newId();
-    env.users.docs.push({ _id, username, passwordHash: await bcrypt.hash(PASSWORD, 4) });
+    env.users.docs.push({
+        _id,
+        username,
+        passwordHash: await Bun.password.hash(PASSWORD, { algorithm: 'bcrypt', cost: 4 }),
+    });
     return _id;
 };
 
@@ -51,6 +54,16 @@ describe('POST /login', () => {
         expect(response.headers.get('cache-control')).toBe('no-store');
         expect(env.sessions.docs).toHaveLength(1);
         expect(env.sessions.docs[0].tokenHash).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it('upgrades a legacy bcrypt hash to argon2id on successful login', async () => {
+        await seedUser();
+        expect(env.users.docs[0].passwordHash).toStartWith('$2');
+
+        expect((await postJson(app, '/login', { username: 'alice', password: PASSWORD })).status).toBe(200);
+
+        expect(env.users.docs[0].passwordHash).toStartWith('$argon2id$');
+        expect((await postJson(app, '/login', { username: 'alice', password: PASSWORD })).status).toBe(200);
     });
 
     it('returns the same 401 for unknown user and wrong password', async () => {
