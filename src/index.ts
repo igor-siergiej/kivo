@@ -49,13 +49,6 @@ export const onStartup = async () => {
 
         await initializeDatabase();
 
-        logger.info('Creating database indexes');
-        const sessions = database.getCollection('sessions');
-        await sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }).catch((error) => {
-            logger.error('Error creating session index', error);
-        });
-        logger.info('Database indexes created');
-
         const corsOriginsList = config
             .get('corsAllowedOrigins')
             .split(',')

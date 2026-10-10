@@ -1,5 +1,6 @@
 import { dependencyContainer } from '../../dependencies';
 import { DependencyToken } from '../dependencyContainer/types';
+import { durationToSeconds } from '../utils/duration';
 
 /** Matches the unique username index so lookups are case-insensitive. */
 export const USERNAME_COLLATION = { locale: 'en', strength: 2 } as const;
@@ -34,6 +35,20 @@ export const initializeDatabase = async () => {
         const logIndexError = (error: unknown) => logger.error('Error creating session index', error);
         await sessionsCollection.createIndex({ tokenHash: 1 }).catch(logIndexError);
         await sessionsCollection.createIndex({ username: 1 }).catch(logIndexError);
+
+        // Sessions outlive nothing: expire them with the refresh token that backs them
+        const config = dependencyContainer.resolve(DependencyToken.Config);
+        const ttlSeconds = durationToSeconds(config.get('refreshTokenExpiry') as string);
+        await sessionsCollection
+            .createIndex({ createdAt: 1 }, { expireAfterSeconds: ttlSeconds })
+            .catch(async (error) => {
+                // 85/86: an index on createdAt exists with a different TTL, replace it
+                if (error?.code !== 85 && error?.code !== 86) return logIndexError(error);
+                await sessionsCollection.dropIndex('createdAt_1');
+                await sessionsCollection
+                    .createIndex({ createdAt: 1 }, { expireAfterSeconds: ttlSeconds })
+                    .catch(logIndexError);
+            });
 
         logger.info('Database indexes created successfully');
     } catch (error) {

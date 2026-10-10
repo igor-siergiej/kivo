@@ -1,13 +1,12 @@
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { dependencyContainer } from '../../dependencies.js';
 import {
     createSession,
+    getRefreshCookie,
     hashToken,
     issueTokens,
     noStore,
-    REFRESH_COOKIE,
     ROTATION_GRACE_MS,
     setRefreshCookie,
     verifyToken,
@@ -21,7 +20,7 @@ export const refresh = async (c: Context) => {
 
     const jwtSecret = config.get('jwtSecret');
 
-    const refreshToken = getCookie(c, REFRESH_COOKIE);
+    const refreshToken = getRefreshCookie(c);
 
     if (!refreshToken) {
         logger.warn('Token refresh attempt with missing refresh token');
