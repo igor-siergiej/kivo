@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { JsonWebTokenError, TokenExpiredError, verify } from 'jsonwebtoken';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { dependencyContainer } from '../../dependencies.js';
 import {
     createSession,
@@ -9,6 +9,7 @@ import {
     noStore,
     REFRESH_COOKIE,
     setRefreshCookie,
+    verifyToken,
 } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 
@@ -26,19 +27,15 @@ export const refresh = async (c: Context) => {
     }
 
     try {
-        const payload = verify(refreshToken, jwtSecret) as {
-            sub: string;
-            aud?: string;
-        };
+        const payload = verifyToken(refreshToken, jwtSecret);
 
-        if (payload.aud !== 'kivo') {
-            logger.warn('Token refresh failed: invalid audience', {
-                audience: payload.aud,
-            });
+        // Tokens issued before tokenType existed carry no claim; sessions are keyed by refresh token hash anyway.
+        if (payload.tokenType === 'access') {
+            logger.warn('Token refresh failed: access token used as refresh token');
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
-        const username = payload.sub;
+        const username = payload.sub as string;
 
         const database = dependencyContainer.resolve(DependencyToken.Database);
         const sessionsCollection = database.getCollection('sessions');
