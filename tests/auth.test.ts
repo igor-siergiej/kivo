@@ -187,8 +187,9 @@ describe('POST /refresh and /logout', () => {
 
         expect(response.status).toBe(200);
         expect((await jsonBody(response)).accessToken).toBeString();
-        expect(env.sessions.docs).toHaveLength(1);
-        expect(env.sessions.docs[0]._id).not.toBe(original._id);
+        expect(env.sessions.docs).toHaveLength(2);
+        expect(original.rotatedAt).toBeInstanceOf(Date);
+        expect(env.sessions.docs[1].familyId).toBe(original.familyId);
     });
 
     it('rejects an access token used as the refresh cookie and a replayed refresh token', async () => {
@@ -226,6 +227,55 @@ describe('POST /refresh and /logout', () => {
         expect(env.sessions.docs).toHaveLength(0);
         expect(response.headers.get('set-cookie')).toContain('refreshToken=;');
         expect((await app.request('/logout', { method: 'POST' })).status).toBe(400);
+    });
+});
+
+describe('refresh token reuse and logout-all', () => {
+    const refreshWith = (cookie: string) => app.request('/refresh', { method: 'POST', headers: { Cookie: cookie } });
+
+    const login = async () => {
+        const response = await postJson(app, '/login', { username: 'alice', password: PASSWORD });
+        return refreshCookie(response);
+    };
+
+    it('keeps the rotated session briefly, then revokes the whole family when a rotated token is replayed late', async () => {
+        await seedUser();
+        const original = await login();
+        const other = await login();
+        const rotated = refreshCookie(await refreshWith(original));
+
+        expect((await refreshWith(original)).status).toBe(401);
+        expect(env.sessions.docs.length).toBe(3);
+
+        const rotatedSession = env.sessions.docs.find((session) => session.rotatedAt);
+        (rotatedSession as { rotatedAt: Date }).rotatedAt = new Date(Date.now() - 60_000);
+
+        expect((await refreshWith(original)).status).toBe(401);
+        expect((await refreshWith(rotated)).status).toBe(401);
+        expect((await refreshWith(other)).status).toBe(200);
+    });
+
+    it('logout-all revokes every session of the user', async () => {
+        await seedUser();
+        const first = await login();
+        await login();
+        await seedUser('bob');
+        await postJson(app, '/login', { username: 'bob', password: PASSWORD });
+
+        const response = await app.request('/logout-all', { method: 'POST', headers: { Cookie: first } });
+
+        expect(response.status).toBe(200);
+        expect(env.sessions.docs.every((session) => session.username === 'bob')).toBe(true);
+        expect((await app.request('/logout-all', { method: 'POST', headers: { Cookie: first } })).status).toBe(401);
+    });
+
+    it('caps active sessions per user by dropping the oldest', async () => {
+        await seedUser();
+        const first = await login();
+        for (let i = 0; i < 10; i++) await login();
+
+        expect(env.sessions.docs).toHaveLength(10);
+        expect((await refreshWith(first)).status).toBe(401);
     });
 });
 

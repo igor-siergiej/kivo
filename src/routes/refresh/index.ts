@@ -8,6 +8,7 @@ import {
     issueTokens,
     noStore,
     REFRESH_COOKIE,
+    ROTATION_GRACE_MS,
     setRefreshCookie,
     verifyToken,
 } from '../../lib/auth/index.js';
@@ -53,6 +54,21 @@ export const refresh = async (c: Context) => {
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
+        const familyId = session.familyId ?? session._id.toString();
+
+        if (session.rotatedAt) {
+            if (Date.now() - session.rotatedAt.getTime() > ROTATION_GRACE_MS) {
+                const revoked = await sessionsCollection.deleteMany(
+                    session.familyId ? { familyId: session.familyId } : { _id: session._id }
+                );
+                logger.warn('Refresh token reuse detected, session family revoked', {
+                    username,
+                    revokedCount: revoked.deletedCount,
+                });
+            }
+            return c.json({ success: false, message: 'Invalid session' }, 401);
+        }
+
         const usersCollection = database.getCollection('users');
         const user = await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION });
 
@@ -63,8 +79,15 @@ export const refresh = async (c: Context) => {
 
         const { accessToken, refreshToken: newRefreshToken } = issueTokens({ username, id: user._id.toString() });
 
-        await createSession(username, newRefreshToken);
-        await sessionsCollection.deleteOne({ _id: session._id });
+        const claimed = await sessionsCollection.updateOne(
+            { _id: session._id, rotatedAt: { $exists: false } },
+            { $set: { rotatedAt: new Date() } }
+        );
+        if (claimed.modifiedCount === 0) {
+            return c.json({ success: false, message: 'Invalid session' }, 401);
+        }
+
+        await createSession(username, newRefreshToken, familyId);
 
         logger.info('Token refreshed successfully', { username });
 

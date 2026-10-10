@@ -9,6 +9,9 @@ const matches = (doc: Doc, filter: Doc, ignoreCase = false) =>
         if (ignoreCase && typeof expected === 'string' && typeof doc[key] === 'string') {
             return (doc[key] as string).toLowerCase() === expected.toLowerCase();
         }
+        if (expected && typeof expected === 'object' && '$exists' in expected) {
+            return (doc[key] !== undefined) === (expected as { $exists: boolean }).$exists;
+        }
         if (expected && typeof expected === 'object' && '$in' in expected) {
             return (expected as { $in: unknown[] }).$in.includes(doc[key]);
         }
@@ -35,6 +38,12 @@ export class FakeCollection {
         const index = this.docs.findIndex((doc) => matches(doc, filter));
         if (index >= 0) this.docs.splice(index, 1);
         return { deletedCount: index >= 0 ? 1 : 0 };
+    };
+
+    deleteMany = async (filter: Doc) => {
+        const before = this.docs.length;
+        this.docs = this.docs.filter((doc) => !matches(doc, filter));
+        return { deletedCount: before - this.docs.length };
     };
 
     updateOne = async (filter: Doc, update: { $set: Doc }) => {

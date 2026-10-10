@@ -45,14 +45,29 @@ export const verifyToken = (token: string, secret: string): JwtPayload & { token
     return payload;
 };
 
-export const createSession = async (username: string, refreshToken: string) => {
+export const MAX_SESSIONS_PER_USER = 10;
+// Tolerates a client firing two refreshes at once (two tabs) without treating it as token theft
+export const ROTATION_GRACE_MS = 10_000;
+
+export const createSession = async (username: string, refreshToken: string, familyId = new ObjectId().toString()) => {
     const database = dependencyContainer.resolve(DependencyToken.Database);
-    await database.getCollection('sessions').insertOne({
+    const sessions = database.getCollection('sessions');
+
+    await sessions.insertOne({
         _id: new ObjectId(),
         username,
         tokenHash: hashToken(refreshToken),
         createdAt: new Date(),
+        familyId,
     });
+
+    const active = await sessions.find({ username, rotatedAt: { $exists: false } }).toArray();
+    if (active.length > MAX_SESSIONS_PER_USER) {
+        const oldest = [...active]
+            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+            .slice(0, active.length - MAX_SESSIONS_PER_USER);
+        await sessions.deleteMany({ _id: { $in: oldest.map((session) => session._id) } });
+    }
 };
 
 const cookieOptions = () => {
