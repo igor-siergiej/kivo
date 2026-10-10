@@ -11,7 +11,7 @@ const SECRET = 'test-secret';
 
 const requestFrom = (ip: string, token?: string) =>
     new Request('http://kivo/verify', {
-        headers: { 'x-forwarded-for': ip, ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        headers: { 'cf-connecting-ip': ip, ...(token ? { authorization: `Bearer ${token}` } : {}) },
     });
 
 const accessToken = (id: string, overrides: Record<string, unknown> = {}) =>
