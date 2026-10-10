@@ -25,6 +25,7 @@ import { register } from './routes/register/index.js';
 import { search } from './routes/search/index.js';
 import { getUsersByUsernames } from './routes/users/index.js';
 import { verify } from './routes/verify/index.js';
+import { NOT_FOUND_BODY } from './types/index.js';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -166,7 +167,7 @@ export const onStartup = async () => {
         app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);
 
         // 404 handler
-        app.all('*', (c) => c.json({ error: 'Not Found' }, 404));
+        app.all('*', (c) => c.json(NOT_FOUND_BODY, 404));
 
         const port = config.get('port');
         const server = Bun.serve({

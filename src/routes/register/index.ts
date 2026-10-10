@@ -66,7 +66,7 @@ export const register = async (c: Context) => {
 
         setRefreshCookie(c, refreshToken);
 
-        return c.json({ accessToken });
+        return c.json({ success: true, accessToken });
     } catch (error) {
         // Lost a race with a concurrent registration of the same username (unique index)
         if ((error as { code?: number }).code === 11000) {

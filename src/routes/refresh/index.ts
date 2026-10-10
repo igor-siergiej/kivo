@@ -93,7 +93,7 @@ export const refresh = async (c: Context) => {
         noStore(c);
         setRefreshCookie(c, newRefreshToken);
 
-        return c.json({ accessToken });
+        return c.json({ success: true, accessToken });
     } catch (error) {
         if (error instanceof TokenExpiredError) {
             logger.warn('Token refresh failed: refresh token expired');
