@@ -6,7 +6,7 @@
   "author": "Igor Siergiej <igorsiergiej@gmail.com>",
   "scripts": {
     "start": "bun --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir build --target=bun --external mongodb",
+    "build": "bun build src/index.ts --outdir build --target=bun",
     "test": "bun test",
     "lint": "biome check .",
     "lint:fix": "biome check --fix --unsafe .",
