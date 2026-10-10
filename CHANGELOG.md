@@ -1,3 +1,10 @@
+## [1.9.5](https://github.com/igor-siergiej/kivo/compare/v1.9.4...v1.9.5) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** validate request bodies and reject operator objects ([#13](https://github.com/igor-siergiej/kivo/issues/13)) ([fd15b96](https://github.com/igor-siergiej/kivo/commit/fd15b96bedce916ae8133f6570b333a05c563d63))
+
 ## [1.9.4](https://github.com/igor-siergiej/kivo/compare/v1.9.3...v1.9.4) (2026-10-10)
 
 
