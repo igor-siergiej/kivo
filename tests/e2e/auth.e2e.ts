@@ -17,6 +17,15 @@ describe('kivo @smoke', () => {
     });
 });
 
+describe('kivo readiness', () => {
+    it('reports ready when the database answers', async () => {
+        const response = await fetch(`${baseUrl}/ready`);
+
+        expect(response.status).toBe(200);
+        expect((await jsonBody(response)).status).toBe('ready');
+    });
+});
+
 describe('kivo auth flow', () => {
     const username = `e2e${Date.now()}`;
     const password = 'Passw0rdPassw0rd';

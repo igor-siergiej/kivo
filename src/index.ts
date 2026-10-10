@@ -26,6 +26,7 @@ import { getUsersByUsernames } from './routes/users/index.js';
 import { verify } from './routes/verify/index.js';
 
 const MAX_BODY_BYTES = 16 * 1024;
+const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 export const onStartup = async () => {
     try {
@@ -105,7 +106,7 @@ export const onStartup = async () => {
         // Global rate limit (skip for metrics and health)
         app.use('*', async (c, next) => {
             const url = c.req.path;
-            if (url === '/metrics' || url === '/health') {
+            if (url === '/metrics' || url === '/health' || url === '/ready') {
                 return next();
             }
 
@@ -137,6 +138,12 @@ export const onStartup = async () => {
             })
         );
 
+        // Readiness: only healthy while MongoDB answers, so orchestrators stop routing during DB outages
+        app.get('/ready', async (c) => {
+            const databaseUp = await database.ping().catch(() => false);
+            return c.json({ status: databaseUp ? 'ready' : 'unavailable', service: 'kivo' }, databaseUp ? 200 : 503);
+        });
+
         // Prometheus metrics
         app.get('/metrics', async (c) => {
             c.header('Content-Type', metricsRegister.contentType);
@@ -161,10 +168,23 @@ export const onStartup = async () => {
         app.all('*', (c) => c.json({ error: 'Not Found' }, 404));
 
         const port = config.get('port');
-        Bun.serve({
+        const server = Bun.serve({
             port,
             fetch: app.fetch,
         });
+
+        // Let in-flight requests finish on deploy/restart, but never hang the container's stop
+        let shuttingDown = false;
+        const shutdown = async (signal: string) => {
+            if (shuttingDown) return;
+            shuttingDown = true;
+            logger.info(`Received ${signal}, shutting down`);
+            setTimeout(() => process.exit(1), SHUTDOWN_TIMEOUT_MS).unref();
+            await server.stop();
+            process.exit(0);
+        };
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        process.on('SIGINT', () => shutdown('SIGINT'));
 
         logger.info(`Kivo authentication service running on port ${port}`);
     } catch (error: unknown) {
