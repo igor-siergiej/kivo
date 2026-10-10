@@ -27,3 +27,7 @@ export const postJson = (app: Hono, path: string, body: unknown, headers: Record
     });
 
 export const refreshCookie = (response: Response) => (response.headers.get('set-cookie') ?? '').split(';')[0];
+
+// biome-ignore lint/suspicious/noExplicitAny: response bodies are asserted on directly
+export const jsonBody = async (response: Response): Promise<Record<string, any>> =>
+    (await response.json()) as Record<string, any>;
