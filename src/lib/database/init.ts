@@ -24,7 +24,13 @@ export const initializeDatabase = async () => {
             }
         );
 
-        logger.info('Database user indexes created successfully');
+        const sessionsCollection = database.getCollection('sessions');
+
+        // /refresh and /logout look sessions up by token hash; /logout-all and reuse detection by username
+        await sessionsCollection.createIndex({ tokenHash: 1 }, { unique: true });
+        await sessionsCollection.createIndex({ username: 1 });
+
+        logger.info('Database indexes created successfully');
     } catch (error) {
         logger.error('Error creating database indexes', error);
         throw error;
