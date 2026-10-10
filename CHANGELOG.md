@@ -1,3 +1,10 @@
+## [1.9.11](https://github.com/igor-siergiej/kivo/compare/v1.9.10...v1.9.11) (2026-10-10)
+
+
+### Bug Fixes
+
+* case-insensitive username lookups and duplicate-key race ([#19](https://github.com/igor-siergiej/kivo/issues/19)) ([73c69e9](https://github.com/igor-siergiej/kivo/commit/73c69e90fb480cbdb654a1630469af668746a95f))
+
 ## [1.9.10](https://github.com/igor-siergiej/kivo/compare/v1.9.9...v1.9.10) (2026-10-10)
 
 
