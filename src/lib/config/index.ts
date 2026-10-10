@@ -25,6 +25,8 @@ const schema = {
     connectionUri: { parser: parsers.string, from: 'CONNECTION_URI' },
     databaseName: { parser: parsers.string, from: 'DATABASE_NAME' },
     jwtSecret: { parser: jwtSecret, from: 'JWT_SECRET' },
+    // Optional EC P-256 PEM; when set tokens are signed ES256 and the public key is served as JWKS
+    jwtPrivateKey: { parser: parsers.string, from: 'JWT_PRIVATE_KEY', optional: true },
     accessTokenExpiry: { parser: duration, from: 'ACCESS_TOKEN_EXPIRY' },
     refreshTokenExpiry: { parser: duration, from: 'REFRESH_TOKEN_EXPIRY' },
     secure: { parser: parsers.boolean, from: 'SECURE' },

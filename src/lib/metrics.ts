@@ -48,6 +48,7 @@ export const rateLimitHitsTotal = new Counter({
 const KNOWN_PATHS = new Set([
     '/health',
     '/ready',
+    '/.well-known/jwks.json',
     '/logout-all',
     '/metrics',
     '/login',

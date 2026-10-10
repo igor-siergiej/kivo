@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
+import { getSigningKeys } from './lib/auth/keys.js';
 import { initializeDatabase } from './lib/database/init.js';
 import { DependencyToken } from './lib/dependencyContainer/types.js';
 import { createErrorHandler } from './lib/errors/handler.js';
@@ -49,6 +50,8 @@ export const onStartup = async () => {
             databaseName: config.get('databaseName'),
         });
         logger.info('Connected to database');
+
+        getSigningKeys(); // fail fast on a malformed JWT_PRIVATE_KEY
 
         await initializeDatabase();
 
@@ -144,6 +147,12 @@ export const onStartup = async () => {
         app.get('/ready', async (c) => {
             const databaseUp = await database.ping().catch(() => false);
             return c.json({ status: databaseUp ? 'ready' : 'unavailable', service: 'kivo' }, databaseUp ? 200 : 503);
+        });
+
+        // Public signing key (empty while tokens are still HS256 only)
+        app.get('/.well-known/jwks.json', (c) => {
+            c.header('Cache-Control', 'public, max-age=300');
+            return c.json({ keys: getSigningKeys() ? [getSigningKeys()?.jwk] : [] });
         });
 
         // Prometheus metrics

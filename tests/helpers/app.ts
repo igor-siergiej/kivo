@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { getSigningKeys } from '../../src/lib/auth/keys';
 import { createErrorHandler } from '../../src/lib/errors/handler';
 import { requireLookupAuth } from '../../src/middleware/lookupAuth';
 import { login } from '../../src/routes/login';
@@ -16,6 +17,7 @@ export const buildApp = () => {
     app.post('/register', register);
     app.post('/refresh', refresh);
     app.get('/verify', verify);
+    app.get('/.well-known/jwks.json', (c) => c.json({ keys: getSigningKeys() ? [getSigningKeys()?.jwk] : [] }));
     app.post('/logout', logout);
     app.post('/logout-all', logoutAll);
     app.get('/search', requireLookupAuth({ allowServiceToken: false }), search);
