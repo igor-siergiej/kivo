@@ -1,3 +1,10 @@
+## [1.9.10](https://github.com/igor-siergiej/kivo/compare/v1.9.9...v1.9.10) (2026-10-10)
+
+
+### Performance Improvements
+
+* **security:** hash passwords natively with argon2id ([#18](https://github.com/igor-siergiej/kivo/issues/18)) ([cde01ee](https://github.com/igor-siergiej/kivo/commit/cde01ee0a3646f7e59b546cfd8e33186adc1ae28))
+
 ## [1.9.9](https://github.com/igor-siergiej/kivo/compare/v1.9.8...v1.9.9) (2026-10-10)
 
 
