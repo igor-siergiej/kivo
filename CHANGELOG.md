@@ -1,3 +1,10 @@
+## [1.9.12](https://github.com/igor-siergiej/kivo/compare/v1.9.11...v1.9.12) (2026-10-10)
+
+
+### Bug Fixes
+
+* allow symbols in passwords and cap length at 72 bytes ([#20](https://github.com/igor-siergiej/kivo/issues/20)) ([badbaa7](https://github.com/igor-siergiej/kivo/commit/badbaa76e26f4daf66cd818647e43f7ccac05ac4))
+
 ## [1.9.11](https://github.com/igor-siergiej/kivo/compare/v1.9.10...v1.9.11) (2026-10-10)
 
 
