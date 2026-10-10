@@ -88,23 +88,18 @@ export const onStartup = async () => {
         app.use('*', applySecurityHeaders);
 
         // Per-request timing for Prometheus histogram
-        const requestStartTimes = new WeakMap<Request, number>();
-
         app.use('*', async (c, next) => {
-            requestStartTimes.set(c.req.raw, performance.now());
+            const start = performance.now();
             await next();
 
-            const url = c.req.path;
-            const path = normalizePath(url);
-            const status = String(c.res.status || 200);
-            const labels = { method: c.req.method, path, status };
+            const labels = {
+                method: c.req.method,
+                path: normalizePath(c.req.path),
+                status: String(c.res.status || 200),
+            };
 
             httpRequestsTotal.inc(labels);
-            const start = requestStartTimes.get(c.req.raw);
-            requestStartTimes.delete(c.req.raw);
-            if (start !== undefined) {
-                httpRequestDurationSeconds.observe(labels, (performance.now() - start) / 1000);
-            }
+            httpRequestDurationSeconds.observe(labels, (performance.now() - start) / 1000);
         });
 
         // Global rate limit (skip for metrics and health)
