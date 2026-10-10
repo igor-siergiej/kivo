@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/igor-siergiej/kivo/compare/v1.10.0...v1.11.0) (2026-10-10)
+
+
+### Features
+
+* **security:** optional auth for /users and /search ([#24](https://github.com/igor-siergiej/kivo/issues/24)) ([60db1fa](https://github.com/igor-siergiej/kivo/commit/60db1face60791e1aa5f5e6dab79019a819eedaa))
+
 # [1.10.0](https://github.com/igor-siergiej/kivo/compare/v1.9.14...v1.10.0) (2026-10-10)
 
 
