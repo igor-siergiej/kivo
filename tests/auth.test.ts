@@ -357,3 +357,33 @@ describe('error handling', () => {
         expect(JSON.stringify(body)).not.toContain('secret');
     });
 });
+
+describe('lookup endpoint authentication', () => {
+    const accessToken = () => sign({ id: 'u1', aud: 'kivo', tokenType: 'access' }, TEST_SECRET, { expiresIn: '5m' });
+
+    beforeEach(() => {
+        env = installFakes({ lookupAuthEnabled: true, serviceToken: 'svc-token-123' });
+        app = buildApp();
+    });
+
+    it('requires credentials on /users and /search when enabled', async () => {
+        expect((await postJson(app, '/users', { usernames: ['alice'] })).status).toBe(401);
+        expect((await app.request('/search?q=alice')).status).toBe(401);
+        expect((await postJson(app, '/users', { usernames: ['alice'] }, { 'x-service-token': 'wrong' })).status).toBe(
+            401
+        );
+    });
+
+    it('accepts an access token, and a service token only for /users', async () => {
+        const bearer = { Authorization: `Bearer ${accessToken()}` };
+
+        expect((await postJson(app, '/users', { usernames: [] }, bearer)).status).toBe(200);
+        expect((await postJson(app, '/users', { usernames: [] }, { 'x-service-token': 'svc-token-123' })).status).toBe(
+            200
+        );
+        expect((await app.request('/search?q=a', { headers: bearer })).status).toBe(400);
+        expect((await app.request('/search?q=alice', { headers: { 'x-service-token': 'svc-token-123' } })).status).toBe(
+            401
+        );
+    });
+});

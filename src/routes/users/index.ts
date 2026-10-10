@@ -48,8 +48,7 @@ export const getUsersByUsernames = async (c: Context) => {
         logger.info('Users retrieved successfully', {
             requestedCount: usernames.length,
             foundCount: users.length,
-            usernames: foundUsernames,
-            notFoundUsernames,
+            notFoundCount: notFoundUsernames.length,
         });
 
         return c.json({
@@ -62,7 +61,7 @@ export const getUsersByUsernames = async (c: Context) => {
         });
     } catch (error) {
         logger.error('Error fetching users', {
-            requestedUsernames: usernames,
+            requestedCount: usernames.length,
             error: error instanceof Error ? error.message : String(error),
         });
         return c.json(

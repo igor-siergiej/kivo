@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { createErrorHandler } from '../../src/lib/errors/handler';
+import { requireLookupAuth } from '../../src/middleware/lookupAuth';
 import { login } from '../../src/routes/login';
 import { logout, logoutAll } from '../../src/routes/logout';
 import { refresh } from '../../src/routes/refresh';
@@ -17,8 +18,8 @@ export const buildApp = () => {
     app.get('/verify', verify);
     app.post('/logout', logout);
     app.post('/logout-all', logoutAll);
-    app.get('/search', search);
-    app.post('/users', getUsersByUsernames);
+    app.get('/search', requireLookupAuth({ allowServiceToken: false }), search);
+    app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);
     return app;
 };
 

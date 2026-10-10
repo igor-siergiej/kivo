@@ -20,6 +20,9 @@ const schema = {
     refreshTokenExpiry: { parser: duration, from: 'REFRESH_TOKEN_EXPIRY' },
     secure: { parser: parsers.boolean, from: 'SECURE' },
     sameSite: { parser: sameSite, from: 'SAME_SITE' },
+    // When true, /users and /search require a bearer access token (or X-Service-Token for /users)
+    lookupAuthEnabled: { parser: parsers.boolean, from: 'LOOKUP_AUTH_ENABLED', default: false },
+    serviceToken: { parser: parsers.string, from: 'SERVICE_TOKEN', optional: true },
     corsAllowedOrigins: {
         parser: parsers.string,
         from: 'CORS_ALLOWED_ORIGINS',
