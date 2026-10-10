@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/igor-siergiej/kivo/compare/v1.11.4...v1.12.0) (2026-10-10)
+
+
+### Features
+
+* graceful shutdown and /ready endpoint ([#29](https://github.com/igor-siergiej/kivo/issues/29)) ([2bb6c7b](https://github.com/igor-siergiej/kivo/commit/2bb6c7bee4dfc56a3d8aa1477db66d26a8959fb3))
+
 ## [1.11.4](https://github.com/igor-siergiej/kivo/compare/v1.11.3...v1.11.4) (2026-10-10)
 
 
