@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/igor-siergiej/kivo/compare/v1.12.1...v1.12.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **security:** hide /metrics from public traffic ([#31](https://github.com/igor-siergiej/kivo/issues/31)) ([9ed1214](https://github.com/igor-siergiej/kivo/commit/9ed121484f0e54cb9e242f98d62341221ed21a0f))
+
 ## [1.12.1](https://github.com/igor-siergiej/kivo/compare/v1.12.0...v1.12.1) (2026-10-10)
 
 
