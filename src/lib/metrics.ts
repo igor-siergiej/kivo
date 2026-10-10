@@ -47,6 +47,8 @@ export const rateLimitHitsTotal = new Counter({
 // so a flood of 404s can't explode metric series.
 const KNOWN_PATHS = new Set([
     '/health',
+    '/ready',
+    '/logout-all',
     '/metrics',
     '/login',
     '/register',
