@@ -1,23 +1,24 @@
-import crypto from 'node:crypto';
 import type { Context } from 'hono';
-import { getCookie, setCookie } from 'hono/cookie';
-import { ObjectId } from 'mongodb';
+import { getCookie } from 'hono/cookie';
+import { JsonWebTokenError, TokenExpiredError, verify } from 'jsonwebtoken';
 import { dependencyContainer } from '../../dependencies.js';
+import {
+    createSession,
+    hashToken,
+    issueTokens,
+    noStore,
+    REFRESH_COOKIE,
+    setRefreshCookie,
+} from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
-
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
 export const refresh = async (c: Context) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
 
-    const refreshToken = getCookie(c, 'refreshToken');
+    const refreshToken = getCookie(c, REFRESH_COOKIE);
 
     if (!refreshToken) {
         logger.warn('Token refresh attempt with missing refresh token');
@@ -25,7 +26,6 @@ export const refresh = async (c: Context) => {
     }
 
     try {
-        const { verify } = await import('jsonwebtoken');
         const payload = verify(refreshToken, jwtSecret) as {
             sub: string;
             aud?: string;
@@ -63,40 +63,18 @@ export const refresh = async (c: Context) => {
             return c.json({ success: false, message: 'Authentication failed' }, 401);
         }
 
-        const { sign } = await import('jsonwebtoken');
-        const newAccessToken = sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, {
-            expiresIn: accessTokenExpiry,
-        });
-        const newRefreshToken = sign({ sub: username, username, id: user._id, aud: 'kivo' }, jwtSecret, {
-            expiresIn: refreshTokenExpiry,
-        });
+        const { accessToken, refreshToken: newRefreshToken } = issueTokens({ username, id: user._id.toString() });
 
-        const newTokenHash = hashToken(newRefreshToken);
-
-        await sessionsCollection.insertOne({
-            _id: new ObjectId(),
-            username,
-            tokenHash: newTokenHash,
-            createdAt: new Date(),
-        });
+        await createSession(username, newRefreshToken);
         await sessionsCollection.deleteOne({ _id: session._id });
 
         logger.info('Token refreshed successfully', { username });
 
-        c.header('Cache-Control', 'no-store');
-        c.header('Pragma', 'no-cache');
+        noStore(c);
+        setRefreshCookie(c, newRefreshToken);
 
-        setCookie(c, 'refreshToken', newRefreshToken, {
-            httpOnly: true,
-            secure,
-            sameSite,
-            maxAge: 30 * 24 * 60 * 60,
-        });
-
-        return c.json({ accessToken: newAccessToken });
+        return c.json({ accessToken });
     } catch (error) {
-        const { TokenExpiredError, JsonWebTokenError } = await import('jsonwebtoken');
-
         if (error instanceof TokenExpiredError) {
             logger.warn('Token refresh failed: refresh token expired');
             return c.json({ success: false, message: 'Refresh token expired' }, 403);

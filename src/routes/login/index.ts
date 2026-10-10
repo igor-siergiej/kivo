@@ -1,9 +1,8 @@
-import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import type { Context } from 'hono';
-import { setCookie } from 'hono/cookie';
-import { ObjectId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
+import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { authAttemptsTotal } from '../../lib/metrics.js';
 
@@ -12,8 +11,6 @@ interface IUser {
     username: string;
     passwordHash: string;
 }
-
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
 export const login = async (c: Context) => {
     const body = await c.req.json<{ username?: string; password?: string }>();
@@ -47,49 +44,15 @@ export const login = async (c: Context) => {
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 
-    const config = dependencyContainer.resolve(DependencyToken.Config);
-    const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
+    const { accessToken, refreshToken } = issueTokens({ username, id: user._id?.toString() ?? username });
 
-    const tokenPayload = {
-        sub: username,
-        username,
-        id: user._id?.toString() || username,
-        aud: 'kivo',
-    };
-
-    const { sign } = await import('jsonwebtoken');
-    const accessToken = sign(tokenPayload, jwtSecret, {
-        expiresIn: accessTokenExpiry,
-    });
-    const refreshToken = sign(tokenPayload, jwtSecret, {
-        expiresIn: refreshTokenExpiry,
-    });
-
-    c.header('Cache-Control', 'no-store');
-    c.header('Pragma', 'no-cache');
-
-    const sessionsCollection = database.getCollection('sessions');
-    const tokenHash = hashToken(refreshToken);
-    await sessionsCollection.insertOne({
-        _id: new ObjectId(),
-        username,
-        tokenHash,
-        createdAt: new Date(),
-    });
+    noStore(c);
+    await createSession(username, refreshToken);
 
     logger.info('User login successful', { username, userId: user._id });
     authAttemptsTotal.inc({ endpoint: 'login', outcome: 'success' });
 
-    setCookie(c, 'refreshToken', refreshToken, {
-        httpOnly: true,
-        secure,
-        sameSite,
-        maxAge: 30 * 24 * 60 * 60,
-    });
+    setRefreshCookie(c, refreshToken);
 
     return c.json({ accessToken });
 };

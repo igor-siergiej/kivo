@@ -1,13 +1,10 @@
-import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import type { Context } from 'hono';
-import { setCookie } from 'hono/cookie';
 import { ObjectId } from 'mongodb';
 import { dependencyContainer } from '../../dependencies.js';
+import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
-
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
 export const register = async (c: Context) => {
     const body = await c.req.json<{ username?: string; password?: string }>();
@@ -30,13 +27,6 @@ export const register = async (c: Context) => {
     }
 
     const database = dependencyContainer.resolve(DependencyToken.Database);
-    const config = dependencyContainer.resolve(DependencyToken.Config);
-    const jwtSecret = config.get('jwtSecret');
-    const accessTokenExpiry = config.get('accessTokenExpiry');
-    const refreshTokenExpiry = config.get('refreshTokenExpiry');
-    const secure = config.get('secure');
-    const sameSite = config.get('sameSite');
-
     const usersCollection = database.getCollection('users');
 
     const existing = await usersCollection.findOne({ username });
@@ -55,31 +45,10 @@ export const register = async (c: Context) => {
             passwordHash,
         });
 
-        const { sign } = await import('jsonwebtoken');
-        const tokenPayload = {
-            sub: username,
-            username,
-            id: result.insertedId,
-            aud: 'kivo',
-        };
-        const accessToken = sign(tokenPayload, jwtSecret, {
-            expiresIn: accessTokenExpiry,
-        });
-        const refreshToken = sign(tokenPayload, jwtSecret, {
-            expiresIn: refreshTokenExpiry,
-        });
+        const { accessToken, refreshToken } = issueTokens({ username, id: result.insertedId.toString() });
 
-        c.header('Cache-Control', 'no-store');
-        c.header('Pragma', 'no-cache');
-
-        const sessionsCollection = database.getCollection('sessions');
-        const tokenHash = hashToken(refreshToken);
-        await sessionsCollection.insertOne({
-            _id: new ObjectId(),
-            username,
-            tokenHash,
-            createdAt: new Date(),
-        });
+        noStore(c);
+        await createSession(username, refreshToken);
 
         logger.info('User registration successful', {
             username,
@@ -87,12 +56,7 @@ export const register = async (c: Context) => {
         });
         registrationsTotal.inc({ outcome: 'success' });
 
-        setCookie(c, 'refreshToken', refreshToken, {
-            httpOnly: true,
-            secure,
-            sameSite,
-            maxAge: 30 * 24 * 60 * 60,
-        });
+        setRefreshCookie(c, refreshToken);
 
         return c.json({ accessToken });
     } catch (error) {
