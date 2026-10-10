@@ -40,7 +40,6 @@
   "module": "src/index.ts",
   "private": true,
   "overrides": {
-    "lodash": "4.17.23",
     "lodash-es": "4.17.23"
   }
 }
