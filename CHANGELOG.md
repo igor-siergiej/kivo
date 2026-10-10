@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/igor-siergiej/kivo/compare/v1.9.2...v1.9.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* **auth:** distinguish access and refresh tokens ([#11](https://github.com/igor-siergiej/kivo/issues/11)) ([879dd72](https://github.com/igor-siergiej/kivo/commit/879dd724d1f7e8f19c9156dd01f1a87f42441312))
+
 ## [1.9.2](https://github.com/igor-siergiej/kivo/compare/v1.9.1...v1.9.2) (2026-10-06)
 
 
