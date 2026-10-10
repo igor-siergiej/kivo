@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'bun:test';
+import { jsonBody } from '../helpers/app';
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3008';
 
 describe('kivo @smoke', () => {
     it('reports healthy @smoke', async () => {
         const response = await fetch(`${baseUrl}/health`);
-        const data = await response.json();
+        const data = await jsonBody(response);
 
         expect(response.status).toBe(200);
         expect(data.status).toBe('healthy');
@@ -28,17 +29,17 @@ describe('kivo auth flow', () => {
             body: JSON.stringify({ username, password }),
         });
         expect(registered.status).toBe(200);
-        const { accessToken } = await registered.json();
+        const { accessToken } = await jsonBody(registered);
         refreshCookie = cookieFrom(registered);
         expect(refreshCookie).toStartWith('refreshToken=');
 
         const verified = await fetch(`${baseUrl}/verify`, { headers: { Authorization: `Bearer ${accessToken}` } });
         expect(verified.status).toBe(200);
-        expect((await verified.json()).payload.username).toBe(username);
+        expect((await jsonBody(verified)).payload.username).toBe(username);
 
         const refreshed = await fetch(`${baseUrl}/refresh`, { method: 'POST', headers: { Cookie: refreshCookie } });
         expect(refreshed.status).toBe(200);
-        expect((await refreshed.json()).accessToken).toBeString();
+        expect((await jsonBody(refreshed)).accessToken).toBeString();
         const rotatedCookie = cookieFrom(refreshed);
 
         const loggedOut = await fetch(`${baseUrl}/logout`, { method: 'POST', headers: { Cookie: rotatedCookie } });

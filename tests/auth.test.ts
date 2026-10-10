@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import bcrypt from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import { buildApp, postJson, refreshCookie } from './helpers/app';
+import { buildApp, jsonBody, postJson, refreshCookie } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
 
 const PASSWORD = 'Passw0rdPassw0rd';
@@ -25,7 +25,7 @@ describe('POST /register', () => {
         const response = await postJson(app, '/register', { username: 'alice', password: PASSWORD });
 
         expect(response.status).toBe(200);
-        expect((await response.json()).accessToken).toBeString();
+        expect((await jsonBody(response)).accessToken).toBeString();
         expect(refreshCookie(response)).toStartWith('refreshToken=');
         expect(env.users.docs).toHaveLength(1);
         expect(env.sessions.docs).toHaveLength(1);
@@ -61,7 +61,7 @@ describe('POST /login', () => {
 
         expect(unknown.status).toBe(401);
         expect(wrong.status).toBe(401);
-        expect(await unknown.json()).toEqual(await wrong.json());
+        expect(await jsonBody(unknown)).toEqual(await jsonBody(wrong));
     });
 
     it('requires username and password', async () => {
@@ -79,7 +79,7 @@ describe('GET /verify', () => {
         const response = await verifyWith(token);
 
         expect(response.status).toBe(200);
-        expect((await response.json()).payload).toEqual({ id: 'u1', username: 'alice' });
+        expect((await jsonBody(response)).payload).toEqual({ id: 'u1', username: 'alice' });
     });
 
     it('rejects missing, forged, expired and wrong-audience tokens', async () => {
@@ -107,7 +107,7 @@ describe('POST /refresh and /logout', () => {
         const response = await app.request('/refresh', { method: 'POST', headers: { Cookie: cookie } });
 
         expect(response.status).toBe(200);
-        expect((await response.json()).accessToken).toBeString();
+        expect((await jsonBody(response)).accessToken).toBeString();
         expect(env.sessions.docs).toHaveLength(1);
         expect(env.sessions.docs[0]._id).not.toBe(original._id);
     });
@@ -141,7 +141,7 @@ describe('POST /users', () => {
         const id = await seedUser('alice');
 
         const response = await postJson(app, '/users', { usernames: ['alice', 'ghost'] });
-        const body = await response.json();
+        const body = await jsonBody(response);
 
         expect(body.users).toEqual([{ id: id.toString(), username: 'alice' }]);
         expect(body.notFoundUsernames).toEqual(['ghost']);
@@ -149,7 +149,7 @@ describe('POST /users', () => {
 
     it('validates the usernames array', async () => {
         expect((await postJson(app, '/users', { usernames: 'alice' })).status).toBe(400);
-        expect((await (await postJson(app, '/users', { usernames: [] })).json()).users).toEqual([]);
+        expect((await jsonBody(await postJson(app, '/users', { usernames: [] }))).users).toEqual([]);
     });
 });
 
