@@ -1,6 +1,6 @@
 {
   "extends": ["@imapps/biome-config/base"],
   "files": {
-    "experimentalScannerIgnores": [".github/workflows-utils"]
+    "includes": ["**", "!!**/.github/workflows-utils"]
   }
 }

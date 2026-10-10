@@ -9,7 +9,7 @@ export const verify = async (c: Context) => {
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
     const authHeader = c.req.header('authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
         logger.warn('Token verification attempt with missing or malformed auth header');
         return c.json(
             {
