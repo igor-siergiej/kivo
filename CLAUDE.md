@@ -23,14 +23,15 @@ src/lib/database/       index setup (users unique+collation, sessions tokenHash/
 ```
 
 ## Auth model
-- Access token (`tokenType: 'access'`, short) and refresh token (`tokenType: 'refresh'`, has `jti`), HS256, `aud`/`iss` = `kivo`. `/verify` only accepts access tokens.
-- Refresh tokens are stored hashed (sha256) in `sessions` with a `familyId`. Refresh rotates: the old session gets `rotatedAt`; replaying it after a 10s grace revokes the whole family. Max 10 active sessions per user.
+- Access token (`tokenType: 'access'`, short) and refresh token (`tokenType: 'refresh'`, has `jti`), HS256 (or ES256 when `JWT_PRIVATE_KEY` is set), `aud`/`iss` = `kivo`. `/verify` only accepts access tokens. `verifyToken` rejects any token whose `header.typ` is present and not `JWT`.
+- Refresh tokens are stored hashed (sha256) in `sessions` with a `familyId`. `initializeDatabase` backfills `familyId` on any legacy row missing it so the reuse-revoke branch always scopes to the full family. Refresh rotates: the old session gets `rotatedAt`; replaying it after a 10s grace revokes the whole family. Max 10 active sessions per user.
 - Cookie: `__Host-refreshToken` when `SECURE=true` (legacy `refreshToken` still read), lifetime = `REFRESH_TOKEN_EXPIRY`; sessions TTL index uses the same value.
 - Passwords: argon2id via `Bun.password`; legacy bcrypt hashes verify and are upgraded on login. Usernames are case-insensitive (collation `en`, strength 2).
 - Failed logins: 5 per username per 15 min locks it (in-memory). Global rate limit: 55/min per IP, 300/min per verified user id. Client IP = `cf-connecting-ip`, else last `x-forwarded-for` hop.
+- `/register` returns the same generic 400 message for "username taken" and other validation failures — no username-existence oracle.
 
 ## Environment
-`PORT, CONNECTION_URI, DATABASE_NAME, JWT_SECRET (>= 32 chars), ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SECURE, SAME_SITE (Strict|Lax|None), CORS_ALLOWED_ORIGINS`, optional `LOOKUP_AUTH_ENABLED` + `SERVICE_TOKEN` (gate `/users`; off until consumers send credentials). Never commit `.env`.
+`PORT, CONNECTION_URI, DATABASE_NAME, JWT_SECRET (>= 32 chars), ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SECURE, SAME_SITE (Strict|Lax|None), CORS_ALLOWED_ORIGINS`, optional `LOOKUP_AUTH_ENABLED` + `SERVICE_TOKEN` (when set, `/users` requires either a valid access token or an `X-Service-Token` header matching `SERVICE_TOKEN`; ship the same value to consumer apps). Optional `JWT_PRIVATE_KEY` (EC P-256 PKCS8 PEM) — when set, tokens are signed ES256 and the public key is served from `/.well-known/jwks.json`; otherwise HS256 with `JWT_SECRET` is used and the JWKS endpoint returns `{keys:[]}`. Never commit `.env`.
 
 ## Endpoints
 `POST /login /register /refresh /logout /logout-all /users`, `GET /verify /health /ready /metrics`. `/metrics` is hidden from Cloudflare-proxied traffic (404); Prometheus scrapes it in-cluster.
