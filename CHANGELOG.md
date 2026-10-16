@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/igor-siergiej/kivo/compare/v1.13.0...v1.14.0) (2026-10-16)
+
+
+### Features
+
+* **security:** drop /search, gate /users, tighten auth edge cases ([8bf98bb](https://github.com/igor-siergiej/kivo/commit/8bf98bba4ec4c950411a596f00dfa0424cc4d916))
+
 # [1.13.0](https://github.com/igor-siergiej/kivo/compare/v1.12.3...v1.13.0) (2026-10-10)
 
 
