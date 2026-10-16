@@ -48,7 +48,13 @@ export const issueTokens = (user: { username: string; id: string }) => {
  * the algorithm list is fixed per key type so a token cannot pick its own verification method.
  */
 export const verifyToken = (token: string, secret: string): JwtPayload & { tokenType?: TokenType } => {
-    const alg = decode(token, { complete: true })?.header.alg;
+    const decoded = decode(token, { complete: true });
+    const alg = decoded?.header.alg;
+    // Reject anything that is not a plain JWT up front. The library only sets typ when it is, so an absent
+    // typ is the legacy default and is accepted; a present but non-JWT typ is not.
+    if (decoded?.header.typ !== undefined && decoded.header.typ !== 'JWT') {
+        throw new JsonWebTokenError('unsupported token type');
+    }
     let payload: string | JwtPayload;
 
     if (alg === 'ES256') {

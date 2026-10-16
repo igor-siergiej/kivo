@@ -6,7 +6,6 @@ import { login } from '../../src/routes/login';
 import { logout, logoutAll } from '../../src/routes/logout';
 import { refresh } from '../../src/routes/refresh';
 import { register } from '../../src/routes/register';
-import { search } from '../../src/routes/search';
 import { getUsersByUsernames } from '../../src/routes/users';
 import { verify } from '../../src/routes/verify';
 
@@ -20,7 +19,6 @@ export const buildApp = () => {
     app.get('/.well-known/jwks.json', (c) => c.json({ keys: getSigningKeys() ? [getSigningKeys()?.jwk] : [] }));
     app.post('/logout', logout);
     app.post('/logout-all', logoutAll);
-    app.get('/search', requireLookupAuth({ allowServiceToken: false }), search);
     app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);
     return app;
 };

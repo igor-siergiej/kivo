@@ -45,23 +45,22 @@ export const rateLimitHitsTotal = new Counter({
 
 // Low-cardinality path set — anything outside this is grouped as 'other'
 // so a flood of 404s can't explode metric series.
-const KNOWN_PATHS = new Set([
-    '/health',
-    '/ready',
-    '/.well-known/jwks.json',
-    '/logout-all',
-    '/metrics',
-    '/login',
-    '/register',
-    '/refresh',
-    '/verify',
-    '/logout',
-    '/search',
-    '/users',
-]);
+const KNOWN_PATHS: Record<string, true> = {
+    '/health': true,
+    '/ready': true,
+    '/.well-known/jwks.json': true,
+    '/logout-all': true,
+    '/metrics': true,
+    '/login': true,
+    '/register': true,
+    '/refresh': true,
+    '/verify': true,
+    '/logout': true,
+    '/users': true,
+};
 
 export const normalizePath = (path: string): string => {
-    if (KNOWN_PATHS.has(path)) return path;
+    if (KNOWN_PATHS[path]) return path;
     return 'other';
 };
 

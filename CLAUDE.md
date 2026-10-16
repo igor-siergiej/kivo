@@ -13,11 +13,11 @@ JWT auth service for the shoppingo / jewellery-catalogue apps. Bun + Hono + Mong
 ## Layout
 ```
 src/index.ts            app wiring: middleware order, routes, shutdown
-src/routes/*            login, register, refresh, verify, logout (+ /logout-all), search, users
+src/routes/*            login, register, refresh, verify, logout (+ /logout-all), users
 src/lib/auth/           token issuing/verifying, sessions, refresh cookie; password.ts = argon2id
 src/lib/config/         env schema (typed AppConfig); durations parsed by lib/utils/duration
 src/lib/validation.ts   body parsing + field validation (throws APIError 400)
-src/lib/rateLimiter.ts  bounded fixed-window limiter used by the global and search limits
+src/lib/rateLimiter.ts  bounded fixed-window limiter used by the global rate limit
 src/middleware/         rateLimit, loginThrottle, lookupAuth, internalOnly, security headers
 src/lib/database/       index setup (users unique+collation, sessions tokenHash/username/TTL)
 ```
@@ -30,10 +30,10 @@ src/lib/database/       index setup (users unique+collation, sessions tokenHash/
 - Failed logins: 5 per username per 15 min locks it (in-memory). Global rate limit: 55/min per IP, 300/min per verified user id. Client IP = `cf-connecting-ip`, else last `x-forwarded-for` hop.
 
 ## Environment
-`PORT, CONNECTION_URI, DATABASE_NAME, JWT_SECRET (>= 32 chars), ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SECURE, SAME_SITE (Strict|Lax|None), CORS_ALLOWED_ORIGINS`, optional `LOOKUP_AUTH_ENABLED` + `SERVICE_TOKEN` (gate `/users`/`/search`; off until consumers send credentials). Never commit `.env`.
+`PORT, CONNECTION_URI, DATABASE_NAME, JWT_SECRET (>= 32 chars), ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SECURE, SAME_SITE (Strict|Lax|None), CORS_ALLOWED_ORIGINS`, optional `LOOKUP_AUTH_ENABLED` + `SERVICE_TOKEN` (gate `/users`; off until consumers send credentials). Never commit `.env`.
 
 ## Endpoints
-`POST /login /register /refresh /logout /logout-all /users`, `GET /verify /search /health /ready /metrics`. `/metrics` is hidden from Cloudflare-proxied traffic (404); Prometheus scrapes it in-cluster.
+`POST /login /register /refresh /logout /logout-all /users`, `GET /verify /health /ready /metrics`. `/metrics` is hidden from Cloudflare-proxied traffic (404); Prometheus scrapes it in-cluster.
 
 ## Delivery
 - PR to `main` runs `PR Checks` (lint, typecheck, test); merge triggers `CI/CD` (semantic-release, Docker image, Dokploy deploy). Use conventional commits.

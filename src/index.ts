@@ -23,7 +23,6 @@ import { login } from './routes/login/index.js';
 import { logout, logoutAll } from './routes/logout/index.js';
 import { refresh } from './routes/refresh/index.js';
 import { register } from './routes/register/index.js';
-import { search } from './routes/search/index.js';
 import { getUsersByUsernames } from './routes/users/index.js';
 import { verify } from './routes/verify/index.js';
 import { NOT_FOUND_BODY } from './types/index.js';
@@ -168,9 +167,6 @@ export const onStartup = async () => {
         app.get('/verify', verify);
         app.post('/logout', logout);
         app.post('/logout-all', logoutAll);
-
-        // Search
-        app.get('/search', requireLookupAuth({ allowServiceToken: false }), search);
 
         // User management
         app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);

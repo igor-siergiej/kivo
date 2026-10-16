@@ -42,6 +42,18 @@ export const initializeDatabase = async () => {
                     .catch(logIndexError);
             });
 
+        // Backfill familyId on sessions created before the rotation-revoke code shipped. Without it, a
+        // refresh-token-reuse incident can only kill the rotated row instead of the whole chain.
+        // Non-fatal: legacy rows still work for /refresh and /logout; only the family revocation path is wider.
+        await sessionsCollection
+            .updateMany({ familyId: { $exists: false } }, [{ $set: { familyId: { $toString: '$_id' } } }])
+            .then((result) => {
+                if (result.modifiedCount > 0) {
+                    logger.info('Backfilled familyId on legacy sessions', { count: result.modifiedCount });
+                }
+            })
+            .catch((error) => logger.error('Error backfilling familyId on legacy sessions', error));
+
         logger.info('Database indexes created successfully');
     } catch (error) {
         logger.error('Error creating database indexes', error);

@@ -50,11 +50,13 @@ describe('POST /register', () => {
 
         const differentCase = await postJson(app, '/register', { username: 'ALICE', password: PASSWORD });
         expect(differentCase.status).toBe(400);
+        // Generic message — the response must not reveal whether the username exists
+        expect((await jsonBody(differentCase)).message).toBe('Could not register the provided username and password');
 
         env.users.findOne = async () => null;
         const raced = await postJson(app, '/register', { username: 'Alice', password: PASSWORD });
         expect(raced.status).toBe(400);
-        expect((await jsonBody(raced)).message).toBe('This username is already taken');
+        expect((await jsonBody(raced)).message).toBe('Could not register the provided username and password');
     });
 
     it('rejects missing credentials, weak passwords and taken usernames', async () => {
@@ -324,30 +326,6 @@ describe('POST /users', () => {
     });
 });
 
-describe('GET /search', () => {
-    it('returns prefix matches before substring matches and honours the limit', async () => {
-        for (const name of ['malice', 'alice', 'alicia', 'zed']) await seedUser(name);
-
-        const body = await jsonBody(await app.request('/search?q=ALI&limit=2'));
-
-        expect(body.usernames).toEqual(['alice', 'alicia']);
-        expect(body.count).toBe(2);
-    });
-
-    it('treats regex characters in the query literally', async () => {
-        await seedUser('alice');
-
-        expect((await jsonBody(await app.request('/search?q=a.*'))).usernames).toEqual([]);
-    });
-
-    it('validates the query and limit before touching the database', async () => {
-        expect((await app.request('/search')).status).toBe(400);
-        expect((await app.request('/search?q=a')).status).toBe(400);
-        expect((await app.request(`/search?q=${'x'.repeat(51)}`)).status).toBe(400);
-        expect((await app.request('/search?q=alice&limit=99')).status).toBe(400);
-    });
-});
-
 describe('request validation', () => {
     it('rejects operator objects and non-string credentials without querying the database', async () => {
         await seedUser();
@@ -409,9 +387,8 @@ describe('lookup endpoint authentication', () => {
         app = buildApp();
     });
 
-    it('requires credentials on /users and /search when enabled', async () => {
+    it('requires credentials on /users when enabled', async () => {
         expect((await postJson(app, '/users', { usernames: ['alice'] })).status).toBe(401);
-        expect((await app.request('/search?q=alice')).status).toBe(401);
         expect((await postJson(app, '/users', { usernames: ['alice'] }, { 'x-service-token': 'wrong' })).status).toBe(
             401
         );
@@ -423,10 +400,6 @@ describe('lookup endpoint authentication', () => {
         expect((await postJson(app, '/users', { usernames: [] }, bearer)).status).toBe(200);
         expect((await postJson(app, '/users', { usernames: [] }, { 'x-service-token': 'svc-token-123' })).status).toBe(
             200
-        );
-        expect((await app.request('/search?q=a', { headers: bearer })).status).toBe(400);
-        expect((await app.request('/search?q=alice', { headers: { 'x-service-token': 'svc-token-123' } })).status).toBe(
-            401
         );
     });
 });

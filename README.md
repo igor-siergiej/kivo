@@ -16,7 +16,7 @@ authorise a request. No UI — it's an internal service.
 - **`/verify`** — a consuming service passes a bearer token and gets back the
   user id + username, or a 401.
 - **`/logout`** — deletes the session so the refresh token can't be reused.
-- **`/search`, `/users`** — look up users by username (rate-limited); used by the
+- **`/users`** — look up users by username (rate-limited); used by the
   list/recipe sharing features in the consuming apps.
 - **`/health`, `/metrics`** — health check and Prometheus metrics.
 
@@ -34,7 +34,7 @@ authorise a request. No UI — it's an internal service.
   handling → security headers → a global in-memory rate limiter (skipped for
   `/health` and `/metrics`) → Prometheus request metrics.
 - Each endpoint is a directory under `src/routes/` (`login`, `register`,
-  `refresh`, `verify`, `logout`, `search`, `users`).
+  `refresh`, `verify`, `logout`, `users`).
 
 ## Running it
 

@@ -42,7 +42,8 @@ export const register = async (c: Context) => {
     if (existing) {
         logger.warn('Registration attempt with existing username', { username });
         registrationsTotal.inc({ outcome: 'username_taken' });
-        return c.json({ success: false, message: 'This username is already taken' }, 400);
+        // Identical message to a generic 400 to avoid leaking whether the username exists.
+        return c.json({ success: false, message: 'Could not register the provided username and password' }, 400);
     }
 
     try {
@@ -69,10 +70,12 @@ export const register = async (c: Context) => {
         return c.json({ success: true, accessToken });
     } catch (error) {
         // Lost a race with a concurrent registration of the same username (unique index)
-        if ((error as { code?: number }).code === 11000) {
+        const isDuplicateKey =
+            error !== null && typeof error === 'object' && 'code' in error && error.code === 11000;
+        if (isDuplicateKey) {
             logger.warn('Registration attempt with existing username', { username });
             registrationsTotal.inc({ outcome: 'username_taken' });
-            return c.json({ success: false, message: 'This username is already taken' }, 400);
+            return c.json({ success: false, message: 'Could not register the provided username and password' }, 400);
         }
 
         logger.error('User registration failed', {
