@@ -5,7 +5,7 @@
     "": {
       "name": "kivo",
       "dependencies": {
-        "@imapps/api-utils": "0.11.0",
+        "@imapps/api-utils": "2.3.0",
         "hono": "^4.13.13",
         "jsonwebtoken": "^9.0.2",
         "mongodb": "^6.21.0",
@@ -53,7 +53,7 @@
 
     "@colors/colors": ["@colors/colors@1.5.0", "", {}, "sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ=="],
 
-    "@imapps/api-utils": ["@imapps/api-utils@0.11.0", "", { "dependencies": { "hono": "^4.6.14", "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-0Sqw4Qn9WzbeBiOJwc11qF1d6gl2KlsA4ly+ux+tUBMM/Lq0lSTobEQTqMaUE3/iZyAwAicliUz95gz/vbU47Q=="],
+    "@imapps/api-utils": ["@imapps/api-utils@2.3.0", "", { "dependencies": { "hono": "^4.6.14", "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-mvYg9i6g3t0P3GlRL9iRq9qq1cr4Xpg708Fj1DTgrx8RQI6xMrX0qyxRehC2g2ImBySVtSLaKSDmlqwUmfRVLQ=="],
 
     "@imapps/biome-config": ["@imapps/biome-config@0.11.0", "", { "peerDependencies": { "@biomejs/biome": "^2.0.0" } }, "sha512-gQ97G8N2AnK77oxybvHbRZ5b9Dzam9Xj37ikatZmAzWymQv7he68uKIBygrsISyT0dI3NVIr6/FmYR1ZWsJAsg=="],
 
