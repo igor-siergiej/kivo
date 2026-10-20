@@ -2,7 +2,7 @@
 
 [![CI/CD](https://github.com/igor-siergiej/kivo/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/igor-siergiej/kivo/actions/workflows/ci-cd.yml)
 
-The authentication service behind the imapps apps (shoppingo, jewellery-catalogue,
+The authentication service behind the imapps apps (tandra, jewellery-catalogue,
 …). It owns register/login, issues short-lived access tokens with rotating
 refresh tokens, and exposes a `/verify` endpoint the other services call to
 authorise a request. No UI — it's an internal service.

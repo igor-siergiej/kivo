@@ -52,7 +52,7 @@ describe('checkGlobalRateLimit', () => {
     });
 
     it('lets an authenticated user exceed the anonymous limit from a shared IP', () => {
-        // Same IP as the exhausted anonymous bucket above: e.g. shoppingo verifying for many users.
+        // Same IP as the exhausted anonymous bucket above: e.g. tandra verifying for many users.
         exhaust('10.0.0.3', undefined, ANONYMOUS_MAX_REQUESTS);
         expect(checkGlobalRateLimit(requestFrom('10.0.0.3')).allowed).toBe(false);
 
