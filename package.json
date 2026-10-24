@@ -16,7 +16,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "@imapps/api-utils": "0.11.0",
+    "@imapps/api-utils": "4.0.1",
     "hono": "^4.13.13",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.21.0",
