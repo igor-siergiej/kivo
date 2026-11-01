@@ -5,7 +5,8 @@ JWT auth service for the shoppingo / jewellery-catalogue apps. Bun + Hono + Mong
 ## Commands (Bun, not yarn/npm)
 - `bun start` - dev server with hot reload (port 3008, needs MongoDB and `.env` from `.env.example`)
 - `bun test` - unit tests (`tests/*.test.ts`, in-memory fakes in `tests/helpers`)
-- `bun run lint` / `bun run lint:fix` - Biome
+- `bun run lint` / `bun run lint:fix` - Oxlint (with the vendored anti-slop rules) + Oxfmt, configured via `@imapps/oxc-config` (`oxlint.config.ts`, `oxfmt.config.ts`); code and JSON only, Markdown/YAML are not formatted
+- Run `bun run lint:fix` before finishing; fix anti-slop violations (parse input with zod at the boundary, keep types precise, add `// SAFETY:` to unavoidable assertions), never suppress them. `lint:fix` may need a second run when formatting moves a statement
 - `bun run typecheck` - `tsc --noEmit` over `src` and `tests`
 - `bun run build` - single self-contained bundle in `build/` (nothing external)
 - e2e: `bash scripts/e2e.sh` against a running server (`E2E_BASE_URL`, default `http://localhost:3008`); `kanban-cli e2e local .` starts Mongo via `docker-compose.test.yml` on 27018 and runs it
@@ -16,7 +17,7 @@ src/index.ts            app wiring: middleware order, routes, shutdown
 src/routes/*            login, register, refresh, verify, logout (+ /logout-all), users
 src/lib/auth/           token issuing/verifying, sessions, refresh cookie; password.ts = argon2id
 src/lib/config/         env schema (typed AppConfig); durations parsed by lib/utils/duration
-src/lib/validation.ts   body parsing + field validation (throws APIError 400)
+src/lib/validation.ts   zod-based body parsing (readJsonBody, credentialsSchema; throws APIError 400)
 src/lib/rateLimiter.ts  bounded fixed-window limiter used by the global rate limit
 src/middleware/         rateLimit, loginThrottle, lookupAuth, internalOnly, security headers
 src/lib/database/       index setup (users unique+collation, sessions tokenHash/username/TTL)
