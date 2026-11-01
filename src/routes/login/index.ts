@@ -28,14 +28,17 @@ export const login = async (c: Context) => {
             hasPassword: !!password,
         });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'missing_credentials' });
+
         return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
     const lockedFor = getLoginLockout(username);
+
     if (lockedFor !== undefined) {
         logger.warn('Login attempt on locked account', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'locked' });
         c.header('Retry-After', String(lockedFor));
+
         return c.json(
             { success: false, message: 'Too many failed attempts, try again later', retryAfter: lockedFor },
             429
@@ -52,14 +55,17 @@ export const login = async (c: Context) => {
         recordFailedLogin(username);
         logger.warn('Login attempt with non-existent user', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'unknown_user' });
+
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 
     const isValid = await verifyPassword(password, user.passwordHash);
+
     if (!isValid) {
         recordFailedLogin(username);
         logger.warn('Login attempt with invalid password', { username });
         authAttemptsTotal.inc({ endpoint: 'login', outcome: 'invalid_password' });
+
         return c.json({ success: false, message: 'Invalid username or password' }, 401);
     }
 

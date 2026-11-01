@@ -32,12 +32,15 @@ const thumbprint = (jwk: JsonWebKey) =>
  */
 export const getSigningKeys = (): SigningKeys | undefined => {
     const raw = dependencyContainer.resolve(DependencyToken.Config).get('jwtPrivateKey');
+
     if (!raw) return undefined;
 
     const pem = raw.replace(/\\n/g, '\n');
+
     if (cached?.pem === pem) return cached.keys;
 
     const privateKey = crypto.createPrivateKey(pem);
+
     if (privateKey.asymmetricKeyType !== 'ec' || privateKey.asymmetricKeyDetails?.namedCurve !== 'prime256v1') {
         throw new Error('JWT_PRIVATE_KEY must be an EC P-256 key (ES256)');
     }
@@ -45,6 +48,7 @@ export const getSigningKeys = (): SigningKeys | undefined => {
     const publicKey = crypto.createPublicKey(privateKey);
     const publicJwk = publicKey.export({ format: 'jwk' }) as JsonWebKey;
     const kid = thumbprint(publicJwk);
+
     const keys: SigningKeys = {
         privateKey,
         publicKey,
@@ -53,5 +57,6 @@ export const getSigningKeys = (): SigningKeys | undefined => {
     };
 
     cached = { pem, keys };
+
     return keys;
 };

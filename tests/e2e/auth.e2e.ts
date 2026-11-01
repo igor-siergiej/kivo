@@ -24,6 +24,7 @@ describe('kivo metrics', () => {
         const proxied = await fetch(`${baseUrl}/metrics`, { headers: { 'cf-connecting-ip': '203.0.113.7' } });
 
         expect(proxied.status).toBe(404);
+
         // Live runs go through Cloudflare, so only assert the internal path locally
         if (!process.env.E2E_BASE_URL?.startsWith('https://')) {
             expect(internal.status).toBe(200);
@@ -73,6 +74,7 @@ describe('kivo auth flow', () => {
             headers: jsonHeaders,
             body: JSON.stringify({ username, password }),
         });
+
         expect(registered.status).toBe(200);
         const { accessToken } = await jsonBody(registered);
         refreshCookie = cookieFrom(registered);
@@ -93,6 +95,7 @@ describe('kivo auth flow', () => {
         const asAccess = await fetch(`${baseUrl}/verify`, {
             headers: { Authorization: `Bearer ${refreshCookie.split('=')[1]}` },
         });
+
         expect(asAccess.status).toBe(401);
 
         const loggedOut = await fetch(`${baseUrl}/logout`, { method: 'POST', headers: { Cookie: rotatedCookie } });
@@ -105,6 +108,7 @@ describe('kivo auth flow', () => {
             headers: jsonHeaders,
             body: JSON.stringify({ username, password: 'a'.repeat(20000) }),
         });
+
         expect(response.status).toBe(413);
     });
 
@@ -114,6 +118,7 @@ describe('kivo auth flow', () => {
             headers: jsonHeaders,
             body: JSON.stringify({ username, password: 'WrongPassw0rd1' }),
         });
+
         expect(response.status).toBe(401);
     });
 });

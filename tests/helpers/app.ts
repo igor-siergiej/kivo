@@ -21,6 +21,7 @@ export const buildApp = () => {
     app.post('/logout', logout);
     app.post('/logout-all', logoutAll);
     app.post('/users', requireLookupAuth({ allowServiceToken: true }), getUsersByUsernames);
+
     return app;
 };
 

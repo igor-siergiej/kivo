@@ -10,6 +10,7 @@ export const logout = async (c: Context) => {
 
     if (!refreshToken) {
         logger.warn('Logout attempt with missing refresh token');
+
         return c.json({ success: false, message: 'refreshToken cookie missing' }, 400);
     }
 
@@ -41,8 +42,10 @@ export const logoutAll = async (c: Context) => {
     const sessionsCollection = database.getCollection('sessions');
 
     const session = await sessionsCollection.findOne({ tokenHash: hashToken(refreshToken) });
+
     if (!session) {
         clearRefreshCookie(c);
+
         return c.json({ success: false, message: 'Invalid session' }, 401);
     }
 
@@ -53,5 +56,6 @@ export const logoutAll = async (c: Context) => {
     });
 
     clearRefreshCookie(c);
+
     return c.json({ success: true, revoked: result.deletedCount });
 };

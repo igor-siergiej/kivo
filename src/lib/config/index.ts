@@ -5,18 +5,23 @@ import { durationToSeconds } from '../utils/duration';
 
 const duration = (value: string) => {
     durationToSeconds(value);
+
     return value as SignOptions['expiresIn'];
 };
 
 const jwtSecret = (value: string) => {
     if (value.length < 32) throw new Error('JWT_SECRET must be at least 32 characters');
+
     return value;
 };
 
 const sameSite = (value: string) => {
     const normalized = value.toLowerCase();
+
     if (normalized === 'strict') return 'Strict' as const;
+
     if (normalized === 'lax') return 'Lax' as const;
+
     if (normalized === 'none') return 'None' as const;
     throw new Error(`SAME_SITE must be Strict, Lax or None, got '${value}'`);
 };
@@ -43,5 +48,6 @@ const schema = {
 } as const;
 
 export type AppConfig = BaseConfigService<typeof schema>;
+
 export const config: AppConfig = new BaseConfigService(schema);
 export const ConfigService = BaseConfigService;

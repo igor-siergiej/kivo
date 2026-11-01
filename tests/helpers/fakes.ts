@@ -10,15 +10,19 @@ const matches = (doc: Doc, filter: Doc, ignoreCase = false) =>
         if (ignoreCase && typeof expected === 'string' && typeof doc[key] === 'string') {
             return (doc[key] as string).toLowerCase() === expected.toLowerCase();
         }
+
         if (expected instanceof RegExp) {
             return typeof doc[key] === 'string' && expected.test(doc[key] as string);
         }
+
         if (expected && typeof expected === 'object' && '$exists' in expected) {
             return (doc[key] !== undefined) === (expected as { $exists: boolean }).$exists;
         }
+
         if (expected && typeof expected === 'object' && '$in' in expected) {
             return (expected as { $in: unknown[] }).$in.includes(doc[key]);
         }
+
         return doc[key] === expected;
     });
 
@@ -34,31 +38,39 @@ export class FakeCollection {
         if (this.uniqueUsername && this.docs.some((existing) => matches(existing, { username: doc.username }, true))) {
             throw Object.assign(new Error('E11000 duplicate key'), { code: 11000 });
         }
+
         this.docs.push(doc);
+
         return { insertedId: doc._id };
     };
 
     deleteOne = async (filter: Doc) => {
         const index = this.docs.findIndex((doc) => matches(doc, filter));
+
         if (index >= 0) this.docs.splice(index, 1);
+
         return { deletedCount: index >= 0 ? 1 : 0 };
     };
 
     deleteMany = async (filter: Doc) => {
         const before = this.docs.length;
         this.docs = this.docs.filter((doc) => !matches(doc, filter));
+
         return { deletedCount: before - this.docs.length };
     };
 
     updateOne = async (filter: Doc, update: { $set: Doc }) => {
         const doc = this.docs.find((candidate) => matches(candidate, filter));
+
         if (doc) Object.assign(doc, update.$set);
+
         return { modifiedCount: doc ? 1 : 0 };
     };
 
     find = (filter: Doc) => {
         const found = this.docs.filter((doc) => matches(doc, filter));
         const cursor = { project: () => cursor, toArray: async () => found };
+
         return cursor;
     };
 }
@@ -77,6 +89,7 @@ export const installFakes = (overrides: Doc = {}): TestEnvironment => {
     const sessions = new FakeCollection();
     const logs: string[] = [];
     const collections: Record<string, FakeCollection> = { users, sessions };
+
     const settings: Doc = {
         jwtSecret: TEST_SECRET,
         accessTokenExpiry: '15m',

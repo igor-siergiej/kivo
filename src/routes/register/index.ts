@@ -27,12 +27,14 @@ export const register = async (c: Context) => {
             hasPassword: !!password,
         });
         registrationsTotal.inc({ outcome: 'missing_credentials' });
+
         return c.json({ success: false, message: 'Username and password are required' }, 400);
     }
 
     if (!isAcceptablePassword(password)) {
         logger.warn('Registration attempt with weak password', { username });
         registrationsTotal.inc({ outcome: 'weak_password' });
+
         return c.json({ success: false, message: 'Password must be 8-72 bytes and contain a letter and a digit' }, 400);
     }
 
@@ -40,15 +42,18 @@ export const register = async (c: Context) => {
     const usersCollection = database.getCollection('users');
 
     const existing = await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION });
+
     if (existing) {
         logger.warn('Registration attempt with existing username', { username });
         registrationsTotal.inc({ outcome: 'username_taken' });
+
         // Identical message to a generic 400 to avoid leaking whether the username exists.
         return c.json({ success: false, message: 'Could not register the provided username and password' }, 400);
     }
 
     try {
         const passwordHash = await hashPassword(password);
+
         const result = await usersCollection.insertOne({
             _id: new ObjectId(),
             username,
@@ -72,9 +77,11 @@ export const register = async (c: Context) => {
     } catch (error) {
         // Lost a race with a concurrent registration of the same username (unique index)
         const isDuplicateKey = error !== null && typeof error === 'object' && 'code' in error && error.code === 11000;
+
         if (isDuplicateKey) {
             logger.warn('Registration attempt with existing username', { username });
             registrationsTotal.inc({ outcome: 'username_taken' });
+
             return c.json({ success: false, message: 'Could not register the provided username and password' }, 400);
         }
 
@@ -83,6 +90,7 @@ export const register = async (c: Context) => {
             error: error instanceof Error ? error.message : String(error),
         });
         registrationsTotal.inc({ outcome: 'error' });
+
         return c.json({ success: false, message: 'Registration failed. Please try again.' }, 500);
     }
 };

@@ -9,11 +9,13 @@ import { DependencyToken } from '../lib/dependencyContainer/types.js';
 const safeEqual = (a: string, b: string) => {
     const left = Buffer.from(a);
     const right = Buffer.from(b);
+
     return left.length === right.length && crypto.timingSafeEqual(left, right);
 };
 
 const hasValidAccessToken = (c: Context, secret: string) => {
     const header = c.req.header('authorization');
+
     if (!header?.startsWith('Bearer ')) return false;
 
     try {
@@ -29,10 +31,12 @@ const hasValidAccessToken = (c: Context, secret: string) => {
  */
 export const requireLookupAuth = (options: { allowServiceToken: boolean }) => async (c: Context, next: Next) => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
+
     if (!config.get('lookupAuthEnabled')) return next();
 
     const serviceToken = config.get('serviceToken');
     const presented = c.req.header('x-service-token');
+
     const serviceTokenValid =
         options.allowServiceToken && !!serviceToken && !!presented && safeEqual(presented, serviceToken);
 

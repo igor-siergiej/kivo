@@ -61,6 +61,7 @@ const KNOWN_PATHS: Record<string, true> = {
 
 export const normalizePath = (path: string): string => {
     if (KNOWN_PATHS[path]) return path;
+
     return 'other';
 };
 
@@ -73,6 +74,7 @@ const REGISTRATION_OUTCOMES = ['success', 'missing_credentials', 'weak_password'
 for (const outcome of LOGIN_OUTCOMES) {
     authAttemptsTotal.inc({ endpoint: 'login', outcome }, 0);
 }
+
 for (const outcome of REGISTRATION_OUTCOMES) {
     registrationsTotal.inc({ outcome }, 0);
 }

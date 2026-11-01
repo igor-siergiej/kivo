@@ -16,6 +16,7 @@ export function createErrorHandler(logger: Logger) {
         }
 
         logger.error('Unhandled error', { error: err.message });
+
         return c.json({ success: false, message: 'Internal Server Error' }, 500);
     };
 }

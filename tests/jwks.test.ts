@@ -7,6 +7,7 @@ import { buildApp, jsonBody, postJson } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
 
 const PASSWORD = 'Passw0rdPassw0rd';
+
 const pem = crypto
     .generateKeyPairSync('ec', { namedCurve: 'P-256' })
     .privateKey.export({ type: 'pkcs8', format: 'pem' })
@@ -17,6 +18,7 @@ let app: ReturnType<typeof buildApp>;
 
 const registerAndGetToken = async () => {
     const response = await postJson(app, '/register', { username: 'alice', password: PASSWORD });
+
     return (await jsonBody(response)).accessToken as string;
 };
 
@@ -73,6 +75,7 @@ describe('without a configured key', () => {
     it('issues HS256, serves an empty JWKS and rejects ES256 tokens', async () => {
         env.users.docs.push({ _id: newId(), username: 'bob', passwordHash: 'x' });
         const token = await registerAndGetToken();
+
         const forged = sign(
             { aud: 'kivo', tokenType: 'access' },
             crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey,

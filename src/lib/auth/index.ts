@@ -24,6 +24,7 @@ export const issueTokens = (user: { username: string; id: string }) => {
     const payload = { sub: user.username, username: user.username, id: user.id, aud: 'kivo' };
     const asymmetric = getSigningKeys();
     const signingKey = asymmetric?.privateKey ?? config.get('jwtSecret');
+
     const options: SignOptions = {
         algorithm: asymmetric ? 'ES256' : ALGORITHM,
         issuer: ISSUER,
@@ -52,15 +53,18 @@ export const issueTokens = (user: { username: string; id: string }) => {
 export const verifyToken = (token: string, secret: string): JwtPayload & { tokenType?: TokenType } => {
     const decoded = decode(token, { complete: true });
     const alg = decoded?.header.alg;
+
     // Reject anything that is not a plain JWT up front. The library only sets typ when it is, so an absent
     // typ is the legacy default and is accepted; a present but non-JWT typ is not.
     if (decoded?.header.typ !== undefined && decoded.header.typ !== 'JWT') {
         throw new JsonWebTokenError('unsupported token type');
     }
+
     let payload: string | JwtPayload;
 
     if (alg === 'ES256') {
         const keys = getSigningKeys();
+
         if (!keys) throw new JsonWebTokenError('asymmetric tokens are not accepted');
         payload = verify(token, keys.publicKey, { algorithms: ['ES256'], audience: 'kivo' });
     } else {
@@ -70,10 +74,12 @@ export const verifyToken = (token: string, secret: string): JwtPayload & { token
     if (typeof payload === 'string') {
         throw new Error('Unexpected string token payload');
     }
+
     return payload;
 };
 
 export const MAX_SESSIONS_PER_USER = 10;
+
 // Tolerates a client firing two refreshes at once (two tabs) without treating it as token theft
 export const ROTATION_GRACE_MS = 10_000;
 
@@ -90,16 +96,19 @@ export const createSession = async (username: string, refreshToken: string, fami
     });
 
     const active = await sessions.find({ username, rotatedAt: { $exists: false } }).toArray();
+
     if (active.length > MAX_SESSIONS_PER_USER) {
         const oldest = [...active]
             .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
             .slice(0, active.length - MAX_SESSIONS_PER_USER);
+
         await sessions.deleteMany({ _id: { $in: oldest.map((session) => session._id) } });
     }
 };
 
 const cookieOptions = () => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
+
     return { httpOnly: true, secure: config.get('secure'), sameSite: config.get('sameSite') } as const;
 };
 
@@ -124,6 +133,7 @@ export const setRefreshCookie = (c: Context, refreshToken: string) => {
 
 export const clearRefreshCookie = (c: Context) => {
     deleteCookie(c, refreshCookieName(), { ...cookieOptions(), path: '/', maxAge: 0 });
+
     if (refreshCookieName() !== LEGACY_REFRESH_COOKIE) {
         deleteCookie(c, LEGACY_REFRESH_COOKIE, { ...cookieOptions(), maxAge: 0 });
     }

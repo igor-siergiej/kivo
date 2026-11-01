@@ -5,6 +5,7 @@ export const durationToSeconds = (value: string | number): number => {
     if (typeof value === 'number') return value;
 
     const match = /^(\d+)\s*([smhdw])?$/i.exec(value.trim());
+
     if (!match) throw new Error(`Unsupported duration '${value}', use e.g. 15m, 12h, 7d`);
 
     return Number(match[1]) * UNIT_SECONDS[(match[2] ?? 's').toLowerCase()];

@@ -8,6 +8,7 @@ export const MAX_USERNAMES_PER_REQUEST = 100;
 
 export const readJsonObject = async (c: Context): Promise<Record<string, unknown>> => {
     let body: unknown;
+
     try {
         body = await c.req.json();
     } catch {
@@ -24,10 +25,12 @@ export const readJsonObject = async (c: Context): Promise<Record<string, unknown
 /** Returns the value only if it is a non-empty string within `maxLength`; otherwise undefined. */
 export const stringField = (body: Record<string, unknown>, key: string, maxLength: number): string | undefined => {
     const value = body[key];
+
     return typeof value === 'string' && value.length > 0 && value.length <= maxLength ? value : undefined;
 };
 
 export const MIN_PASSWORD_LENGTH = 8;
+
 // bcrypt-era limit kept: longer inputs add no strength to legacy hashes and cost more to hash
 export const MAX_PASSWORD_BYTES = 72;
 

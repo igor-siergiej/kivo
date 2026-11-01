@@ -25,6 +25,7 @@ export const refresh = async (c: Context) => {
 
     if (!refreshToken) {
         logger.warn('Token refresh attempt with missing refresh token');
+
         return c.json({ success: false, message: 'refreshToken cookie missing' }, 400);
     }
 
@@ -34,6 +35,7 @@ export const refresh = async (c: Context) => {
         // Tokens issued before tokenType existed carry no claim; sessions are keyed by refresh token hash anyway.
         if (payload.tokenType === 'access') {
             logger.warn('Token refresh failed: access token used as refresh token');
+
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
@@ -51,6 +53,7 @@ export const refresh = async (c: Context) => {
 
         if (!session) {
             logger.warn('Token refresh failed: session not found', { username });
+
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
@@ -61,11 +64,13 @@ export const refresh = async (c: Context) => {
                 const revoked = await sessionsCollection.deleteMany(
                     session.familyId ? { familyId: session.familyId } : { _id: session._id }
                 );
+
                 logger.warn('Refresh token reuse detected, session family revoked', {
                     username,
                     revokedCount: revoked.deletedCount,
                 });
             }
+
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
@@ -74,6 +79,7 @@ export const refresh = async (c: Context) => {
 
         if (!user) {
             logger.warn('Token refresh failed: user not found', { username });
+
             return c.json({ success: false, message: 'Authentication failed' }, 401);
         }
 
@@ -83,6 +89,7 @@ export const refresh = async (c: Context) => {
             { _id: session._id, rotatedAt: { $exists: false } },
             { $set: { rotatedAt: new Date() } }
         );
+
         if (claimed.modifiedCount === 0) {
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
@@ -98,6 +105,7 @@ export const refresh = async (c: Context) => {
     } catch (error) {
         if (error instanceof TokenExpiredError) {
             logger.warn('Token refresh failed: refresh token expired');
+
             return c.json({ success: false, message: 'Refresh token expired' }, 403);
         }
 
@@ -105,10 +113,12 @@ export const refresh = async (c: Context) => {
             logger.warn('Token refresh failed: invalid refresh token', {
                 error: (error as Error).message,
             });
+
             return c.json({ success: false, message: 'Invalid refresh token' }, 401);
         }
 
         logger.error('Error refreshing token', error);
+
         return c.json({ success: false, message: 'Internal server error' }, 500);
     }
 };

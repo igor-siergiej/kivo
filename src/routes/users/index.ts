@@ -17,6 +17,7 @@ export const getUsersByUsernames = async (c: Context) => {
         logger.warn('Get users request with invalid usernames format', {
             receivedType: Array.isArray(usernames) ? 'array' : typeof usernames,
         });
+
         return c.json(
             { success: false, message: `usernames must be an array of up to ${MAX_USERNAMES_PER_REQUEST} strings` },
             400
@@ -25,6 +26,7 @@ export const getUsersByUsernames = async (c: Context) => {
 
     if (usernames.length === 0) {
         logger.info('Get users request with empty usernames array');
+
         return c.json({ success: true, users: [] });
     }
 
@@ -32,6 +34,7 @@ export const getUsersByUsernames = async (c: Context) => {
 
     if (!database) {
         logger.error('Database service not available');
+
         return c.json({ success: false, message: 'Service unavailable' }, 503);
     }
 
@@ -65,6 +68,7 @@ export const getUsersByUsernames = async (c: Context) => {
             requestedCount: usernames.length,
             error: error instanceof Error ? error.message : String(error),
         });
+
         return c.json(
             {
                 success: false,

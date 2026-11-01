@@ -10,5 +10,6 @@ export async function internalOnly(c: Context, next: Next) {
     if (c.req.header('cf-connecting-ip')) {
         return c.json(NOT_FOUND_BODY, 404);
     }
+
     await next();
 }
