@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/igor-siergiej/kivo/compare/v1.14.0...v1.14.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **docker:** pin Bun 1.4.4 for Brotli decoder CVE ([#51](https://github.com/igor-siergiej/kivo/issues/51)) ([b3f2ecc](https://github.com/igor-siergiej/kivo/commit/b3f2ecc6b8428d709f7ab3cfcd412502e6b00c69))
+
 # [1.14.0](https://github.com/igor-siergiej/kivo/compare/v1.13.0...v1.14.0) (2026-10-16)
 
 

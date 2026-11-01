@@ -1,6 +1,6 @@
 # Kivo - Authentication Service
 
-JWT auth service for the shoppingo / jewellery-catalogue apps. Bun + Hono + MongoDB, deployed to Dokploy (`kivo.imapps.uk`, internal `kivo-api-1pae1e:3008`).
+JWT auth service for the tandra / jewellery-catalogue apps. Bun + Hono + MongoDB, deployed to Dokploy (`kivo.imapps.uk`, internal `kivo-api-1pae1e:3008`).
 
 ## Commands (Bun, not yarn/npm)
 - `bun start` - dev server with hot reload (port 3008, needs MongoDB and `.env` from `.env.example`)
