@@ -1,4 +1,5 @@
 import type { Context, Next } from 'hono';
+
 import { NOT_FOUND_BODY } from '../types/index.js';
 
 /**

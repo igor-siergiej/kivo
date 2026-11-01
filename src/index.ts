@@ -2,6 +2,7 @@ import { requestLogger } from '@imapps/api-utils/hono';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
+
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { getSigningKeys } from './lib/auth/keys.js';
 import { initializeDatabase } from './lib/database/init.js';

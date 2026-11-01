@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { jsonBody } from '../helpers/app';
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3008';

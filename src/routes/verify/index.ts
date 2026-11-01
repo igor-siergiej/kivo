@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+
 import { dependencyContainer } from '../../dependencies.js';
 import { verifyToken } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';

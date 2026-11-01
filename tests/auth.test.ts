@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { sign } from 'jsonwebtoken';
+
 import { buildApp, jsonBody, postJson, refreshCookie } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
 

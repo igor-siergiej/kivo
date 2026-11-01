@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test';
+
 import { sign } from 'jsonwebtoken';
+
 import {
     ANONYMOUS_MAX_REQUESTS,
     AUTHENTICATED_MAX_REQUESTS,

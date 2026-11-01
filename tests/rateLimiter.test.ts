@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { FixedWindowLimiter } from '../src/lib/rateLimiter';
 
 describe('FixedWindowLimiter', () => {

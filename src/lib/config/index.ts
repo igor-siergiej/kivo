@@ -1,5 +1,6 @@
 import { ConfigService as BaseConfigService, parsers } from '@imapps/api-utils';
 import type { SignOptions } from 'jsonwebtoken';
+
 import { durationToSeconds } from '../utils/duration';
 
 const duration = (value: string) => {

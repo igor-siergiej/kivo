@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
+
 import type { Context, Next } from 'hono';
+
 import { dependencyContainer } from '../dependencies.js';
 import { verifyToken } from '../lib/auth/index.js';
 import { DependencyToken } from '../lib/dependencyContainer/types.js';

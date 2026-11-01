@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+
 import { APIError, HttpErrorCode } from '../types/index.js';
 
 export const MAX_USERNAME_LENGTH = 64;

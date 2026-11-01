@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
+
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { decode, JsonWebTokenError, type JwtPayload, type SignOptions, sign, verify } from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../dependencyContainer/types.js';
 import { durationToSeconds } from '../utils/duration.js';

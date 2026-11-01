@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+
 import { getSigningKeys } from '../../src/lib/auth/keys';
 import { createErrorHandler } from '../../src/lib/errors/handler';
 import { requireLookupAuth } from '../../src/middleware/lookupAuth';
