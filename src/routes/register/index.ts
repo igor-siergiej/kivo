@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
 
 import { dependencyContainer } from '../../dependencies.js';
 import { createSession, issueTokens, noStore, setRefreshCookie } from '../../lib/auth/index.js';
@@ -7,18 +8,12 @@ import { hashPassword } from '../../lib/auth/password.js';
 import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { registrationsTotal } from '../../lib/metrics.js';
-import {
-    isAcceptablePassword,
-    MAX_PASSWORD_LENGTH,
-    MAX_USERNAME_LENGTH,
-    readJsonObject,
-    stringField,
-} from '../../lib/validation.js';
+import { credentialsSchema, isAcceptablePassword, readJsonBody } from '../../lib/validation.js';
+
+const duplicateKeyError = z.object({ code: z.literal(11000) });
 
 export const register = async (c: Context) => {
-    const body = await readJsonObject(c);
-    const username = stringField(body, 'username', MAX_USERNAME_LENGTH);
-    const password = stringField(body, 'password', MAX_PASSWORD_LENGTH);
+    const { username, password } = await readJsonBody(c, credentialsSchema);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
@@ -76,7 +71,7 @@ export const register = async (c: Context) => {
         return c.json({ success: true, accessToken });
     } catch (error) {
         // Lost a race with a concurrent registration of the same username (unique index)
-        const isDuplicateKey = error !== null && typeof error === 'object' && 'code' in error && error.code === 11000;
+        const isDuplicateKey = duplicateKeyError.safeParse(error).success;
 
         if (isDuplicateKey) {
             logger.warn('Registration attempt with existing username', { username });

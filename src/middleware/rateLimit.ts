@@ -26,7 +26,7 @@ export function getVerifiedUserId(request: Request, jwtSecret: string): string |
     try {
         const payload = verifyToken(authHeader.slice('Bearer '.length), jwtSecret);
 
-        return payload.tokenType === 'access' && typeof payload.id === 'string' && payload.id ? payload.id : undefined;
+        return payload.tokenType === 'access' && payload.id ? payload.id : undefined;
     } catch {
         return undefined;
     }

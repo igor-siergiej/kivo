@@ -39,7 +39,13 @@ export const refresh = async (c: Context) => {
             return c.json({ success: false, message: 'Invalid session' }, 401);
         }
 
-        const username = payload.sub as string;
+        const username = payload.sub;
+
+        if (!username) {
+            logger.warn('Token refresh failed: token has no subject');
+
+            return c.json({ success: false, message: 'Invalid session' }, 401);
+        }
 
         const database = dependencyContainer.resolve(DependencyToken.Database);
         const sessionsCollection = database.getCollection('sessions');
@@ -111,7 +117,7 @@ export const refresh = async (c: Context) => {
 
         if (error instanceof JsonWebTokenError) {
             logger.warn('Token refresh failed: invalid refresh token', {
-                error: (error as Error).message,
+                error: error.message,
             });
 
             return c.json({ success: false, message: 'Invalid refresh token' }, 401);

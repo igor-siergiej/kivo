@@ -52,7 +52,7 @@ export const verify = async (c: Context) => {
 
         if (error instanceof JsonWebTokenError) {
             logger.warn('Token verification failed: invalid token', {
-                error: (error as Error).message,
+                error: error.message,
             });
 
             return c.json({ success: false, message: 'Invalid token' }, 401);

@@ -46,7 +46,7 @@ export const getSigningKeys = (): SigningKeys | undefined => {
     }
 
     const publicKey = crypto.createPublicKey(privateKey);
-    const publicJwk = publicKey.export({ format: 'jwk' }) as JsonWebKey;
+    const publicJwk = publicKey.export({ format: 'jwk' });
     const kid = thumbprint(publicJwk);
 
     const keys: SigningKeys = {

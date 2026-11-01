@@ -7,7 +7,7 @@ import { hashPassword, isLegacyHash, verifyAgainstDummy, verifyPassword } from '
 import { USERNAME_COLLATION } from '../../lib/database/init.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
 import { authAttemptsTotal } from '../../lib/metrics.js';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, readJsonObject, stringField } from '../../lib/validation.js';
+import { credentialsSchema, readJsonBody } from '../../lib/validation.js';
 import { clearFailedLogins, getLoginLockout, recordFailedLogin } from '../../middleware/loginThrottle.js';
 
 interface IUser {
@@ -17,9 +17,7 @@ interface IUser {
 }
 
 export const login = async (c: Context) => {
-    const body = await readJsonObject(c);
-    const username = stringField(body, 'username', MAX_USERNAME_LENGTH);
-    const password = stringField(body, 'password', MAX_PASSWORD_LENGTH);
+    const { username, password } = await readJsonBody(c, credentialsSchema);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
     if (!username || !password) {
@@ -48,7 +46,7 @@ export const login = async (c: Context) => {
     const database = dependencyContainer.resolve(DependencyToken.Database);
     const usersCollection = database.getCollection('users');
 
-    const user = (await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION })) as IUser | null;
+    const user: IUser | null = await usersCollection.findOne({ username }, { collation: USERNAME_COLLATION });
 
     if (!user) {
         await verifyAgainstDummy(password);

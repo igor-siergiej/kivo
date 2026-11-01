@@ -82,7 +82,7 @@ describe('kivo auth flow', () => {
 
         const verified = await fetch(`${baseUrl}/verify`, { headers: { Authorization: `Bearer ${accessToken}` } });
         expect(verified.status).toBe(200);
-        expect((await jsonBody(verified)).payload.username).toBe(username);
+        expect((await jsonBody(verified)).payload?.username).toBe(username);
 
         const refreshed = await fetch(`${baseUrl}/refresh`, { method: 'POST', headers: { Cookie: refreshCookie } });
         expect(refreshed.status).toBe(200);

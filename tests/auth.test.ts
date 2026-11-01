@@ -286,7 +286,9 @@ describe('refresh token reuse and logout-all', () => {
         expect(env.sessions.docs.length).toBe(3);
 
         const rotatedSession = env.sessions.docs.find((session) => session.rotatedAt);
-        (rotatedSession as { rotatedAt: Date }).rotatedAt = new Date(Date.now() - 60_000);
+
+        if (!rotatedSession) throw new Error('expected a rotated session');
+        rotatedSession.rotatedAt = new Date(Date.now() - 60_000);
 
         expect((await refreshWith(original)).status).toBe(401);
         expect((await refreshWith(rotated)).status).toBe(401);

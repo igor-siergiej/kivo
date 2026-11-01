@@ -11,12 +11,15 @@ import {
 
 const SECRET = 'test-secret';
 
-const requestFrom = (ip: string, token?: string) =>
-    new Request('http://kivo/verify', {
-        headers: { 'cf-connecting-ip': ip, ...(token ? { authorization: `Bearer ${token}` } : {}) },
-    });
+const requestFrom = (ip: string, token?: string) => {
+    const headers = new Headers({ 'cf-connecting-ip': ip });
 
-const accessToken = (id: string, overrides: Record<string, unknown> = {}) =>
+    if (token) headers.set('authorization', `Bearer ${token}`);
+
+    return new Request('http://kivo/verify', { headers });
+};
+
+const accessToken = (id: string, overrides: { tokenType?: string; aud?: string } = {}) =>
     sign({ id, username: id, aud: 'kivo', tokenType: 'access', ...overrides }, SECRET, { expiresIn: '5m' });
 
 const exhaust = (ip: string, userId: string | undefined, count: number) => {

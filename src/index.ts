@@ -62,10 +62,6 @@ export const onStartup = async () => {
 
         const jwtSecret = config.get('jwtSecret');
 
-        if (typeof jwtSecret !== 'string') {
-            throw new Error('jwtSecret is not configured');
-        }
-
         const app = new Hono();
 
         // CORS

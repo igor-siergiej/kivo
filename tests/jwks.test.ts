@@ -19,7 +19,11 @@ let app: ReturnType<typeof buildApp>;
 const registerAndGetToken = async () => {
     const response = await postJson(app, '/register', { username: 'alice', password: PASSWORD });
 
-    return (await jsonBody(response)).accessToken as string;
+    const { accessToken } = await jsonBody(response);
+
+    if (!accessToken) throw new Error('register did not return an access token');
+
+    return accessToken;
 };
 
 describe('asymmetric tokens', () => {
@@ -40,7 +44,7 @@ describe('asymmetric tokens', () => {
     it('publishes a JWKS whose key verifies the issued tokens without the shared secret', async () => {
         const token = await registerAndGetToken();
 
-        const { keys } = await jsonBody(await app.request('/.well-known/jwks.json'));
+        const { keys = [] } = await jsonBody(await app.request('/.well-known/jwks.json'));
         const publicKey = crypto.createPublicKey({ key: keys[0], format: 'jwk' });
 
         expect(keys).toHaveLength(1);

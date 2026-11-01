@@ -6,7 +6,8 @@ import { durationToSeconds } from '../utils/duration';
 const duration = (value: string) => {
     durationToSeconds(value);
 
-    return value as SignOptions['expiresIn'];
+    // SAFETY: durationToSeconds only accepts digits with an optional s/m/h/d/w unit, a subset of jsonwebtoken's ms format.
+    return value as NonNullable<SignOptions['expiresIn']>;
 };
 
 const jwtSecret = (value: string) => {
