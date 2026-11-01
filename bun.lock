@@ -40,7 +40,7 @@
 
     "@imapps/api-utils": ["@imapps/api-utils@0.11.0", "", { "dependencies": { "hono": "^4.6.14", "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-0Sqw4Qn9WzbeBiOJwc11qF1d6gl2KlsA4ly+ux+tUBMM/Lq0lSTobEQTqMaUE3/iZyAwAicliUz95gz/vbU47Q=="],
 
-    "@imapps/oxc-config": ["@imapps/oxc-config@../oxc-config-local.tgz", { "peerDependencies": { "@oxlint/plugins": "1.90.0", "oxfmt": "0.75.0", "oxlint": "1.90.0" } }, "sha512-ymvl0mtcXUwXghyxM5Ke6jzSJHLhpCy062Ezugc7Y1eYBerZrc3X+5TUnCszz9vsPWqYfDdoxfZKMh7RyiJvwg=="],
+    "@imapps/oxc-config": ["@imapps/oxc-config@../oxc-config-local.tgz", { "peerDependencies": { "@oxlint/plugins": "1.90.0", "oxfmt": "0.75.0", "oxlint": "1.90.0" } }, "sha512-wqKoohlW//EGqRT77SwNCHSzr1sTHF6v2+cClO3a09fuleXGEFDYZccBIzQ5zweA8ahVIUt7j95uxYcziidoYQ=="],
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.4.6", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-y+x3H1xBZd38n10NZF/rEBlvDOOMQ6LKUTHqr8R9VkJ+mmQOYtJFxIlkkK8fZrtOiL6VixbOBWMbZGBdal3Z1g=="],
 
