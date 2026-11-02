@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { sign } from 'jsonwebtoken';
+
 import { buildApp, jsonBody, postJson, refreshCookie } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
 
@@ -20,6 +22,7 @@ const seedUser = async (username = 'alice') => {
         username,
         passwordHash: await Bun.password.hash(PASSWORD, { algorithm: 'bcrypt', cost: 4 }),
     });
+
     return _id;
 };
 
@@ -88,10 +91,12 @@ describe('refresh cookie', () => {
         expect(cookie).not.toContain('Domain');
 
         const token = cookie.split(';')[0].split('=')[1];
+
         const viaLegacyName = await app.request('/refresh', {
             method: 'POST',
             headers: { Cookie: `refreshToken=${token}` },
         });
+
         expect(viaLegacyName.status).toBe(200);
     });
 });
@@ -206,6 +211,7 @@ describe('GET /verify', () => {
 describe('POST /refresh and /logout', () => {
     const loginCookie = async () => {
         await seedUser();
+
         return refreshCookie(await postJson(app, '/login', { username: 'alice', password: PASSWORD }));
     };
 
@@ -230,6 +236,7 @@ describe('POST /refresh and /logout', () => {
             method: 'POST',
             headers: { Cookie: `refreshToken=${accessToken}` },
         });
+
         expect(asRefresh.status).toBe(401);
 
         expect((await app.request('/refresh', { method: 'POST', headers: { Cookie: cookie } })).status).toBe(200);
@@ -265,6 +272,7 @@ describe('refresh token reuse and logout-all', () => {
 
     const login = async () => {
         const response = await postJson(app, '/login', { username: 'alice', password: PASSWORD });
+
         return refreshCookie(response);
     };
 
@@ -278,7 +286,9 @@ describe('refresh token reuse and logout-all', () => {
         expect(env.sessions.docs.length).toBe(3);
 
         const rotatedSession = env.sessions.docs.find((session) => session.rotatedAt);
-        (rotatedSession as { rotatedAt: Date }).rotatedAt = new Date(Date.now() - 60_000);
+
+        if (!rotatedSession) throw new Error('expected a rotated session');
+        rotatedSession.rotatedAt = new Date(Date.now() - 60_000);
 
         expect((await refreshWith(original)).status).toBe(401);
         expect((await refreshWith(rotated)).status).toBe(401);
@@ -302,6 +312,7 @@ describe('refresh token reuse and logout-all', () => {
     it('caps active sessions per user by dropping the oldest', async () => {
         await seedUser();
         const first = await login();
+
         for (let i = 0; i < 10; i++) await login();
 
         expect(env.sessions.docs).toHaveLength(10);

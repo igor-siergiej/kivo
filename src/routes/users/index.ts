@@ -1,21 +1,21 @@
 import type { Context } from 'hono';
+import { z } from 'zod';
+
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
-import { MAX_USERNAME_LENGTH, MAX_USERNAMES_PER_REQUEST, readJsonObject } from '../../lib/validation.js';
+import { MAX_USERNAME_LENGTH, MAX_USERNAMES_PER_REQUEST, readJsonBody } from '../../lib/validation.js';
+
+const usersRequestSchema = z.object({
+    usernames: z.array(z.string().max(MAX_USERNAME_LENGTH)).max(MAX_USERNAMES_PER_REQUEST).optional().catch(undefined),
+});
 
 export const getUsersByUsernames = async (c: Context) => {
-    const body = await readJsonObject(c);
-    const { usernames } = body;
+    const { usernames } = await readJsonBody(c, usersRequestSchema);
     const logger = dependencyContainer.resolve(DependencyToken.Logger);
 
-    if (
-        !Array.isArray(usernames) ||
-        usernames.length > MAX_USERNAMES_PER_REQUEST ||
-        !usernames.every((name) => typeof name === 'string' && name.length <= MAX_USERNAME_LENGTH)
-    ) {
-        logger.warn('Get users request with invalid usernames format', {
-            receivedType: Array.isArray(usernames) ? 'array' : typeof usernames,
-        });
+    if (!usernames) {
+        logger.warn('Get users request with invalid usernames format');
+
         return c.json(
             { success: false, message: `usernames must be an array of up to ${MAX_USERNAMES_PER_REQUEST} strings` },
             400
@@ -24,6 +24,7 @@ export const getUsersByUsernames = async (c: Context) => {
 
     if (usernames.length === 0) {
         logger.info('Get users request with empty usernames array');
+
         return c.json({ success: true, users: [] });
     }
 
@@ -31,6 +32,7 @@ export const getUsersByUsernames = async (c: Context) => {
 
     if (!database) {
         logger.error('Database service not available');
+
         return c.json({ success: false, message: 'Service unavailable' }, 503);
     }
 
@@ -64,6 +66,7 @@ export const getUsersByUsernames = async (c: Context) => {
             requestedCount: usernames.length,
             error: error instanceof Error ? error.message : String(error),
         });
+
         return c.json(
             {
                 success: false,

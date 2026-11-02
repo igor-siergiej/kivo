@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+
 import { dependencyContainer } from '../../dependencies.js';
 import { verifyToken } from '../../lib/auth/index.js';
 import { DependencyToken } from '../../lib/dependencyContainer/types.js';
@@ -11,6 +12,7 @@ export const verify = async (c: Context) => {
 
     if (!authHeader?.startsWith('Bearer ')) {
         logger.warn('Token verification attempt with missing or malformed auth header');
+
         return c.json(
             {
                 success: false,
@@ -29,12 +31,14 @@ export const verify = async (c: Context) => {
             logger.warn('Token verification failed: not an access token', {
                 tokenType: payload.tokenType,
             });
+
             return c.json({ success: false, message: 'Invalid or expired token' }, 401);
         }
 
         logger.info('Token verified successfully', {
             username: payload.username,
         });
+
         return c.json({
             success: true,
             payload: { id: payload.id, username: payload.username },
@@ -42,17 +46,20 @@ export const verify = async (c: Context) => {
     } catch (error) {
         if (error instanceof TokenExpiredError) {
             logger.warn('Token verification failed: token expired');
+
             return c.json({ success: false, message: 'Token expired' }, 401);
         }
 
         if (error instanceof JsonWebTokenError) {
             logger.warn('Token verification failed: invalid token', {
-                error: (error as Error).message,
+                error: error.message,
             });
+
             return c.json({ success: false, message: 'Invalid token' }, 401);
         }
 
         logger.error('Error verifying token', error);
+
         return c.json({ success: false, message: 'Internal server error' }, 500);
     }
 };

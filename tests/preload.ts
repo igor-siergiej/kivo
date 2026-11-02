@@ -1,5 +1,5 @@
 // Config is built at import time and reads these; CI has no .env.
-const defaults: Record<string, string> = {
+const defaults = {
     PORT: '3008',
     CONNECTION_URI: 'mongodb://localhost:27017',
     DATABASE_NAME: 'kivo_test',

@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import crypto from 'node:crypto';
+
 import { decode, sign, verify } from 'jsonwebtoken';
+
 import { buildApp, jsonBody, postJson } from './helpers/app';
 import { installFakes, newId, TEST_SECRET, type TestEnvironment } from './helpers/fakes';
 
 const PASSWORD = 'Passw0rdPassw0rd';
+
 const pem = crypto
     .generateKeyPairSync('ec', { namedCurve: 'P-256' })
     .privateKey.export({ type: 'pkcs8', format: 'pem' })
@@ -15,7 +18,12 @@ let app: ReturnType<typeof buildApp>;
 
 const registerAndGetToken = async () => {
     const response = await postJson(app, '/register', { username: 'alice', password: PASSWORD });
-    return (await jsonBody(response)).accessToken as string;
+
+    const { accessToken } = await jsonBody(response);
+
+    if (!accessToken) throw new Error('register did not return an access token');
+
+    return accessToken;
 };
 
 describe('asymmetric tokens', () => {
@@ -36,7 +44,7 @@ describe('asymmetric tokens', () => {
     it('publishes a JWKS whose key verifies the issued tokens without the shared secret', async () => {
         const token = await registerAndGetToken();
 
-        const { keys } = await jsonBody(await app.request('/.well-known/jwks.json'));
+        const { keys = [] } = await jsonBody(await app.request('/.well-known/jwks.json'));
         const publicKey = crypto.createPublicKey({ key: keys[0], format: 'jwk' });
 
         expect(keys).toHaveLength(1);
@@ -71,6 +79,7 @@ describe('without a configured key', () => {
     it('issues HS256, serves an empty JWKS and rejects ES256 tokens', async () => {
         env.users.docs.push({ _id: newId(), username: 'bob', passwordHash: 'x' });
         const token = await registerAndGetToken();
+
         const forged = sign(
             { aud: 'kivo', tokenType: 'access' },
             crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey,

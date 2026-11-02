@@ -26,6 +26,7 @@ export class FixedWindowLimiter {
         if (!entry || now > entry.resetTime) {
             this.ensureCapacity(now);
             this.entries.set(key, { count: 1, resetTime: now + this.windowMs });
+
             return { allowed: true };
         }
 
@@ -34,6 +35,7 @@ export class FixedWindowLimiter {
         }
 
         entry.count++;
+
         return { allowed: true };
     }
 
@@ -47,6 +49,7 @@ export class FixedWindowLimiter {
         if (this.entries.size < this.maxKeys) return;
 
         this.purgeExpired(now);
+
         // Still full of live keys: evict the oldest insertions
         for (const key of this.entries.keys()) {
             if (this.entries.size < this.maxKeys) break;

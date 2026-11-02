@@ -1,6 +1,0 @@
-{
-  "extends": ["@imapps/biome-config/base"],
-  "files": {
-    "includes": ["**", "!!**/.github/workflows-utils"]
-  }
-}

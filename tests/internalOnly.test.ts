@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test';
+
 import { Hono } from 'hono';
+
 import { internalOnly } from '../src/middleware/internalOnly';
 
 describe('internalOnly', () => {

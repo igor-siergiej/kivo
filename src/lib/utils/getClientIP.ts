@@ -5,15 +5,19 @@
  */
 export function getClientIP(request: Request): string {
     const cfConnectingIp = request.headers.get('cf-connecting-ip');
+
     if (cfConnectingIp) return cfConnectingIp.trim();
 
     const xForwardedFor = request.headers.get('x-forwarded-for');
+
     if (xForwardedFor) {
         const hops = xForwardedFor.split(',');
+
         return hops[hops.length - 1].trim();
     }
 
     const xRealIp = request.headers.get('x-real-ip');
+
     if (xRealIp) return xRealIp.trim();
 
     return 'unknown';

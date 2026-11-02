@@ -62,7 +62,7 @@ Requires **Bun 1.x** and a **MongoDB**. Copy `.env.example` to `.env`:
 bun install
 bun start          # :3008, hot reload
 bun test           # unit tests, tests/*.test.ts (in-memory fakes)
-bun run lint       # Biome (lint:fix to apply)
+bun run lint       # Oxlint + Oxfmt check (lint:fix to apply)
 bun run typecheck  # tsc --noEmit
 bun run build      # bun build → build/
 ```

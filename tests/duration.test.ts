@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { durationToSeconds } from '../src/lib/utils/duration';
 
 describe('durationToSeconds', () => {

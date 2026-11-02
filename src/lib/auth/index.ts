@@ -1,8 +1,11 @@
 import crypto from 'node:crypto';
+
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { decode, JsonWebTokenError, type JwtPayload, type SignOptions, sign, verify } from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
+
 import { dependencyContainer } from '../../dependencies.js';
 import { DependencyToken } from '../dependencyContainer/types.js';
 import { durationToSeconds } from '../utils/duration.js';
@@ -10,7 +13,17 @@ import { getSigningKeys } from './keys.js';
 
 const LEGACY_REFRESH_COOKIE = 'refreshToken';
 
-export type TokenType = 'access' | 'refresh';
+const verifiedPayloadSchema = z.looseObject({
+    sub: z.string().optional().catch(undefined),
+    id: z.string().optional().catch(undefined),
+    username: z.string().optional().catch(undefined),
+    // Tokens issued before tokenType existed carry no claim
+    tokenType: z.enum(['access', 'refresh']).optional().catch(undefined),
+});
+
+export type VerifiedPayload = z.output<typeof verifiedPayloadSchema>;
+
+export type TokenType = NonNullable<VerifiedPayload['tokenType']>;
 
 const ALGORITHM = 'HS256';
 const ISSUER = 'kivo';
@@ -22,11 +35,13 @@ export const issueTokens = (user: { username: string; id: string }) => {
     const payload = { sub: user.username, username: user.username, id: user.id, aud: 'kivo' };
     const asymmetric = getSigningKeys();
     const signingKey = asymmetric?.privateKey ?? config.get('jwtSecret');
+
     const options: SignOptions = {
         algorithm: asymmetric ? 'ES256' : ALGORITHM,
         issuer: ISSUER,
-        ...(asymmetric ? { keyid: asymmetric.kid } : {}),
     };
+
+    if (asymmetric) options.keyid = asymmetric.kid;
 
     return {
         accessToken: sign({ ...payload, tokenType: 'access' }, signingKey, {
@@ -47,31 +62,38 @@ export const issueTokens = (user: { username: string; id: string }) => {
  * ES256 tokens verify against the public key, HS256 (legacy / key not configured) against the shared secret;
  * the algorithm list is fixed per key type so a token cannot pick its own verification method.
  */
-export const verifyToken = (token: string, secret: string): JwtPayload & { tokenType?: TokenType } => {
+export const verifyToken = (token: string, secret: string): VerifiedPayload => {
     const decoded = decode(token, { complete: true });
     const alg = decoded?.header.alg;
+
     // Reject anything that is not a plain JWT up front. The library only sets typ when it is, so an absent
     // typ is the legacy default and is accepted; a present but non-JWT typ is not.
     if (decoded?.header.typ !== undefined && decoded.header.typ !== 'JWT') {
         throw new JsonWebTokenError('unsupported token type');
     }
+
     let payload: string | JwtPayload;
 
     if (alg === 'ES256') {
         const keys = getSigningKeys();
+
         if (!keys) throw new JsonWebTokenError('asymmetric tokens are not accepted');
         payload = verify(token, keys.publicKey, { algorithms: ['ES256'], audience: 'kivo' });
     } else {
         payload = verify(token, secret, { algorithms: [ALGORITHM], audience: 'kivo' });
     }
 
-    if (typeof payload === 'string') {
+    const claims = verifiedPayloadSchema.safeParse(payload);
+
+    if (!claims.success) {
         throw new Error('Unexpected string token payload');
     }
-    return payload;
+
+    return claims.data;
 };
 
 export const MAX_SESSIONS_PER_USER = 10;
+
 // Tolerates a client firing two refreshes at once (two tabs) without treating it as token theft
 export const ROTATION_GRACE_MS = 10_000;
 
@@ -88,16 +110,19 @@ export const createSession = async (username: string, refreshToken: string, fami
     });
 
     const active = await sessions.find({ username, rotatedAt: { $exists: false } }).toArray();
+
     if (active.length > MAX_SESSIONS_PER_USER) {
         const oldest = [...active]
             .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
             .slice(0, active.length - MAX_SESSIONS_PER_USER);
+
         await sessions.deleteMany({ _id: { $in: oldest.map((session) => session._id) } });
     }
 };
 
 const cookieOptions = () => {
     const config = dependencyContainer.resolve(DependencyToken.Config);
+
     return { httpOnly: true, secure: config.get('secure'), sameSite: config.get('sameSite') } as const;
 };
 
@@ -116,12 +141,13 @@ export const setRefreshCookie = (c: Context, refreshToken: string) => {
     setCookie(c, refreshCookieName(), refreshToken, {
         ...cookieOptions(),
         path: '/',
-        maxAge: durationToSeconds(config.get('refreshTokenExpiry') as string),
+        maxAge: durationToSeconds(config.get('refreshTokenExpiry')),
     });
 };
 
 export const clearRefreshCookie = (c: Context) => {
     deleteCookie(c, refreshCookieName(), { ...cookieOptions(), path: '/', maxAge: 0 });
+
     if (refreshCookieName() !== LEGACY_REFRESH_COOKIE) {
         deleteCookie(c, LEGACY_REFRESH_COOKIE, { ...cookieOptions(), maxAge: 0 });
     }

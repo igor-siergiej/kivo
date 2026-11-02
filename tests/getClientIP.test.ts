@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { getClientIP } from '../src/lib/utils/getClientIP';
 
 const requestWith = (headers: Record<string, string>) => new Request('http://kivo/health', { headers });

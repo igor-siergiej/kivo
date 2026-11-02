@@ -1,4 +1,5 @@
 import type { Logger, MongoDbConnection } from '@imapps/api-utils';
+
 import type { AppConfig } from '../config';
 import type { Session, User } from '../database/types';
 

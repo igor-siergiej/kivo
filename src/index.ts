@@ -2,6 +2,7 @@ import { requestLogger } from '@imapps/api-utils/hono';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
+
 import { dependencyContainer, registerDepdendencies } from './dependencies.js';
 import { getSigningKeys } from './lib/auth/keys.js';
 import { initializeDatabase } from './lib/database/init.js';
@@ -60,9 +61,6 @@ export const onStartup = async () => {
             .map((o: string) => o.trim());
 
         const jwtSecret = config.get('jwtSecret');
-        if (typeof jwtSecret !== 'string') {
-            throw new Error('jwtSecret is not configured');
-        }
 
         const app = new Hono();
 
@@ -110,14 +108,17 @@ export const onStartup = async () => {
         // Global rate limit (skip for metrics and health)
         app.use('*', async (c, next) => {
             const url = c.req.path;
+
             if (url === '/metrics' || url === '/health' || url === '/ready') {
                 return next();
             }
 
             const userId = getVerifiedUserId(c.req.raw, jwtSecret);
             const rateLimitResult = checkGlobalRateLimit(c.req.raw, userId);
+
             if (!rateLimitResult.allowed) {
                 rateLimitHitsTotal.inc();
+
                 return c.json(
                     {
                         success: false,
@@ -127,6 +128,7 @@ export const onStartup = async () => {
                     429
                 );
             }
+
             return next();
         });
 
@@ -145,18 +147,21 @@ export const onStartup = async () => {
         // Readiness: only healthy while MongoDB answers, so orchestrators stop routing during DB outages
         app.get('/ready', async (c) => {
             const databaseUp = await database.ping().catch(() => false);
+
             return c.json({ status: databaseUp ? 'ready' : 'unavailable', service: 'kivo' }, databaseUp ? 200 : 503);
         });
 
         // Public signing key (empty while tokens are still HS256 only)
         app.get('/.well-known/jwks.json', (c) => {
             c.header('Cache-Control', 'public, max-age=300');
+
             return c.json({ keys: getSigningKeys() ? [getSigningKeys()?.jwk] : [] });
         });
 
         // Prometheus metrics
         app.get('/metrics', internalOnly, async (c) => {
             c.header('Content-Type', metricsRegister.contentType);
+
             return c.body(await metricsRegister.metrics());
         });
 
@@ -175,6 +180,7 @@ export const onStartup = async () => {
         app.all('*', (c) => c.json(NOT_FOUND_BODY, 404));
 
         const port = config.get('port');
+
         const server = Bun.serve({
             port,
             fetch: app.fetch,
@@ -182,6 +188,7 @@ export const onStartup = async () => {
 
         // Let in-flight requests finish on deploy/restart, but never hang the container's stop
         let shuttingDown = false;
+
         const shutdown = async (signal: string) => {
             if (shuttingDown) return;
             shuttingDown = true;
@@ -190,6 +197,7 @@ export const onStartup = async () => {
             await server.stop();
             process.exit(0);
         };
+
         process.on('SIGTERM', () => shutdown('SIGTERM'));
         process.on('SIGINT', () => shutdown('SIGINT'));
 

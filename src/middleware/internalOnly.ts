@@ -1,4 +1,5 @@
 import type { Context, Next } from 'hono';
+
 import { NOT_FOUND_BODY } from '../types/index.js';
 
 /**
@@ -9,5 +10,6 @@ export async function internalOnly(c: Context, next: Next) {
     if (c.req.header('cf-connecting-ip')) {
         return c.json(NOT_FOUND_BODY, 404);
     }
+
     await next();
 }

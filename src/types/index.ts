@@ -1,6 +1,8 @@
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
+
 export class APIError extends Error {
-    public status: HttpErrorCode;
-    constructor(message: string, status: HttpErrorCode) {
+    public status: ContentfulStatusCode;
+    constructor(message: string, status: ContentfulStatusCode) {
         super(message);
         this.status = status;
         this.name = 'APIError';
