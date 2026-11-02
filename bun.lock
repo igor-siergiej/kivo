@@ -13,7 +13,7 @@
         "zod": "^4.6.7",
       },
       "devDependencies": {
-        "@imapps/oxc-config": "file:../oxc-config-local.tgz",
+        "@imapps/oxc-config": "7.0.0",
         "@oxlint/plugins": "1.90.0",
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/git": "^10.0.1",
@@ -40,7 +40,7 @@
 
     "@imapps/api-utils": ["@imapps/api-utils@0.11.0", "", { "dependencies": { "hono": "^4.6.14", "minio": "^8.0.0", "mongodb": "^6.19.0" } }, "sha512-0Sqw4Qn9WzbeBiOJwc11qF1d6gl2KlsA4ly+ux+tUBMM/Lq0lSTobEQTqMaUE3/iZyAwAicliUz95gz/vbU47Q=="],
 
-    "@imapps/oxc-config": ["@imapps/oxc-config@../oxc-config-local.tgz", { "peerDependencies": { "@oxlint/plugins": "1.90.0", "oxfmt": "0.75.0", "oxlint": "1.90.0" } }, "sha512-wqKoohlW//EGqRT77SwNCHSzr1sTHF6v2+cClO3a09fuleXGEFDYZccBIzQ5zweA8ahVIUt7j95uxYcziidoYQ=="],
+    "@imapps/oxc-config": ["@imapps/oxc-config@7.0.0", "", { "peerDependencies": { "@oxlint/plugins": "1.90.0", "oxfmt": "0.75.0", "oxlint": "1.90.0" } }, "sha512-2Sycrm/T71bEDFj2RO25u/0a9r4nFeQth0bdOwhCH1MdRCFclfRDPmbM/tIob21f+bGwqN+uYV2Y+VJDS0rnDQ=="],
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.4.6", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-y+x3H1xBZd38n10NZF/rEBlvDOOMQ6LKUTHqr8R9VkJ+mmQOYtJFxIlkkK8fZrtOiL6VixbOBWMbZGBdal3Z1g=="],
 
