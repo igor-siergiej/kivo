@@ -25,16 +25,16 @@
   },
   "devDependencies": {
     "@imapps/oxc-config": "7.0.0",
-    "@oxlint/plugins": "1.90.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@types/bun": "^1.4.2",
+    "@oxlint/plugins": "1.91.0",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
+    "@types/bun": "^1.4.4",
     "@types/jsonwebtoken": "^9.0.2",
     "husky": "^9.1.7",
     "lint-staged": "17.6.0",
-    "oxfmt": "0.75.0",
-    "oxlint": "1.90.0",
-    "semantic-release": "^24.2.0",
+    "oxfmt": "0.76.0",
+    "oxlint": "1.91.0",
+    "semantic-release": "^25.0.9",
     "typescript": "^7.0.2"
   },
   "lint-staged": {
