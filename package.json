@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@imapps/api-utils": "0.11.0",
-    "hono": "^4.13.13",
+    "hono": "^4.13.16",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.21.0",
     "prom-client": "^15.1.3",
