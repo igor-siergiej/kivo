@@ -41,4 +41,4 @@ src/lib/database/       index setup (users unique+collation, sessions tokenHash/
 - PR to `main` runs `PR Checks` (lint, typecheck, test); merge triggers `CI/CD` (semantic-release, Docker image, Dokploy deploy). Use conventional commits.
 - Docker: multi-stage, runner has only `build/`, runs as `bun`, healthcheck on `/health`. The registry token is only in the builder stage.
 - Gotchas: a unique index on existing prod data can crash-loop startup (happened once with `sessions.tokenHash`); keep index builds non-fatal or check data first.
-- Work board: `kanban/kivo.board.md` in the notes dir (kanban-worker skill); `.kanban-cli.json` configures local e2e + live smoke on `https://kivo.imapps.uk`.
+- Work board: `kanban/kivo.board.md` in the notes dir (kanban-worker skill); `jott-config.json` configures local e2e + live smoke on `https://kivo.imapps.uk`.
